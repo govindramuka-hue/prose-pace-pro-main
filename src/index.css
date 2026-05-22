@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Cormorant+Garamond:wght@400;500;600&family=Crimson+Text:wght@400;600&family=EB+Garamond:wght@400;500;600&family=Libre+Baskerville:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Spectral:wght@400;500;600&family=Vollkorn:wght@400;500;600&display=swap');
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* DEFAULT (Cinema dark) */
+  :root, html[data-theme="dark"] {
+    --background: 220 15% 6%;
+    --foreground: 40 25% 92%;
+    --card: 220 14% 9%;
+    --card-foreground: 40 25% 92%;
+    --popover: 220 14% 9%;
+    --popover-foreground: 40 25% 92%;
+    --primary: 15 90% 58%;
+    --primary-foreground: 220 15% 6%;
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 40 25% 92%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 40 10% 60%;
+    --accent: 25 80% 55%;
+    --accent-foreground: 220 15% 6%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 40 25% 92%;
+    --border: 220 12% 18%;
+    --input: 220 12% 18%;
+    --ring: 15 90% 58%;
+    --radius: 0.75rem;
+    --reading-bg: 220 18% 5%;
+    --reading-text: 40 30% 94%;
+    --reading-dim: 40 15% 45%;
+    --reading-highlight: 15 90% 65%;
+    --tension-low: 200 60% 50%;
+    --tension-mid: 35 90% 55%;
+    --tension-high: 0 85% 55%;
+    --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 40px hsl(15 90% 58% / 0.25);
+    --sidebar-background: 220 15% 6%;
+    --sidebar-foreground: 40 25% 92%;
+    --sidebar-primary: 15 90% 58%;
+    --sidebar-primary-foreground: 220 15% 6%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 40 25% 92%;
+    --sidebar-border: 220 12% 18%;
+    --sidebar-ring: 15 90% 58%;
+  }
+
+  /* MIDNIGHT — deep navy */
+  html[data-theme="midnight"] {
+    --background: 222 45% 7%;
+    --foreground: 210 30% 92%;
+    --card: 222 40% 11%;
+    --card-foreground: 210 30% 92%;
+    --popover: 222 40% 11%;
+    --popover-foreground: 210 30% 92%;
+    --primary: 210 100% 70%;
+    --primary-foreground: 222 45% 7%;
+    --secondary: 222 35% 15%;
+    --secondary-foreground: 210 30% 92%;
+    --muted: 222 35% 15%;
+    --muted-foreground: 210 15% 60%;
+    --accent: 195 90% 60%;
+    --accent-foreground: 222 45% 7%;
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 210 100% 70%;
+    --reading-bg: 222 50% 5%;
+    --reading-text: 210 35% 95%;
+    --reading-dim: 210 18% 50%;
+    --reading-highlight: 195 100% 75%;
+  }
+
+  /* SEPIA — warm vintage paper */
+  html[data-theme="sepia"] {
+    --background: 38 45% 92%;
+    --foreground: 28 35% 15%;
+    --card: 38 40% 88%;
+    --card-foreground: 28 35% 15%;
+    --popover: 38 40% 88%;
+    --popover-foreground: 28 35% 15%;
+    --primary: 18 70% 42%;
+    --primary-foreground: 38 45% 96%;
+    --secondary: 38 30% 84%;
+    --secondary-foreground: 28 35% 15%;
+    --muted: 38 30% 84%;
+    --muted-foreground: 28 20% 40%;
+    --accent: 25 60% 50%;
+    --accent-foreground: 38 45% 96%;
+    --border: 38 25% 78%;
+    --input: 38 25% 78%;
+    --ring: 18 70% 42%;
+    --reading-bg: 38 45% 92%;
+    --reading-text: 28 35% 15%;
+    --reading-dim: 28 20% 45%;
+    --reading-highlight: 18 70% 38%;
+  }
+
+  /* PAPER — warm off-white, no tint */
+  html[data-theme="paper"] {
+    --background: 36 35% 95%;
+    --foreground: 30 15% 18%;
+    --card: 36 30% 91%;
+    --card-foreground: 30 15% 18%;
+    --popover: 36 30% 91%;
+    --popover-foreground: 30 15% 18%;
+    --primary: 12 60% 45%;
+    --primary-foreground: 36 35% 95%;
+    --secondary: 36 25% 88%;
+    --secondary-foreground: 30 15% 18%;
+    --muted: 36 25% 88%;
+    --muted-foreground: 30 10% 45%;
+    --accent: 18 50% 50%;
+    --accent-foreground: 36 35% 95%;
+    --border: 36 20% 82%;
+    --input: 36 20% 82%;
+    --ring: 12 60% 45%;
+    --reading-bg: 36 35% 95%;
+    --reading-text: 30 15% 18%;
+    --reading-dim: 30 10% 50%;
+    --reading-highlight: 12 60% 42%;
+  }
+
+  /* LIGHT — clean white */
+  html[data-theme="light"] {
+    --background: 0 0% 99%;
+    --foreground: 220 15% 15%;
+    --card: 0 0% 96%;
+    --card-foreground: 220 15% 15%;
+    --popover: 0 0% 96%;
+    --popover-foreground: 220 15% 15%;
+    --primary: 15 80% 50%;
+    --primary-foreground: 0 0% 99%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 220 15% 15%;
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 8% 45%;
+    --accent: 25 70% 50%;
+    --accent-foreground: 0 0% 99%;
+    --border: 220 14% 86%;
+    --input: 220 14% 86%;
+    --ring: 15 80% 50%;
+    --reading-bg: 0 0% 99%;
+    --reading-text: 220 15% 15%;
+    --reading-dim: 220 8% 50%;
+    --reading-highlight: 15 80% 48%;
+  }
+
+  /* DUNE — warm sand desert */
+  html[data-theme="dune"] {
+    --background: 32 35% 80%;
+    --foreground: 25 40% 18%;
+    --card: 32 30% 76%;
+    --card-foreground: 25 40% 18%;
+    --popover: 32 30% 76%;
+    --popover-foreground: 25 40% 18%;
+    --primary: 12 75% 38%;
+    --primary-foreground: 32 35% 95%;
+    --secondary: 32 25% 72%;
+    --secondary-foreground: 25 40% 18%;
+    --muted: 32 25% 72%;
+    --muted-foreground: 25 25% 35%;
+    --accent: 22 70% 45%;
+    --accent-foreground: 32 35% 95%;
+    --border: 32 22% 66%;
+    --input: 32 22% 66%;
+    --ring: 12 75% 38%;
+    --reading-bg: 32 38% 78%;
+    --reading-text: 25 45% 15%;
+    --reading-dim: 25 20% 40%;
+    --reading-highlight: 12 75% 35%;
+  }
+
+  /* FOREST — deep forest green with cream text */
+  html[data-theme="forest"] {
+    --background: 145 25% 10%;
+    --foreground: 60 25% 90%;
+    --card: 145 22% 14%;
+    --card-foreground: 60 25% 90%;
+    --popover: 145 22% 14%;
+    --popover-foreground: 60 25% 90%;
+    --primary: 80 70% 65%;
+    --primary-foreground: 145 25% 10%;
+    --secondary: 145 18% 18%;
+    --secondary-foreground: 60 25% 90%;
+    --muted: 145 18% 18%;
+    --muted-foreground: 60 12% 60%;
+    --accent: 60 60% 60%;
+    --accent-foreground: 145 25% 10%;
+    --border: 145 15% 22%;
+    --input: 145 15% 22%;
+    --ring: 80 70% 65%;
+    --reading-bg: 145 28% 9%;
+    --reading-text: 60 30% 92%;
+    --reading-dim: 60 12% 50%;
+    --reading-highlight: 80 75% 70%;
+  }
+
+  /* CONTRAST — true high contrast */
+  html[data-theme="contrast"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 50 100% 60%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 50 100% 60%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 50 100% 60%;
+    --reading-bg: 0 0% 0%;
+    --reading-text: 0 0% 100%;
+    --reading-dim: 0 0% 70%;
+    --reading-highlight: 50 100% 65%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root {
+    @apply bg-background text-foreground;
+    min-height: 100%;
+  }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+  }
+
+  /* Per-data-font overrides for the reading column ONLY (.reading-font) */
+  html[data-font="serif"] .reading-font,
+  html[data-font="lora"] .reading-font { font-family: 'Lora', 'Fraunces', Georgia, serif; }
+  html[data-font="sans"] .reading-font,
+  html[data-font="inter"] .reading-font { font-family: 'Inter', system-ui, sans-serif; }
+  html[data-font="literata"] .reading-font { font-family: 'Literata', Georgia, serif; }
+  html[data-font="merriweather"] .reading-font { font-family: 'Merriweather', Georgia, serif; }
+  html[data-font="crimson"] .reading-font { font-family: 'Crimson Text', Georgia, serif; }
+  html[data-font="libre"] .reading-font { font-family: 'Libre Baskerville', Georgia, serif; }
+  html[data-font="source-serif"] .reading-font { font-family: 'Source Serif 4', Georgia, serif; }
+  html[data-font="spectral"] .reading-font { font-family: 'Spectral', Georgia, serif; }
+  html[data-font="vollkorn"] .reading-font { font-family: 'Vollkorn', Georgia, serif; }
+  html[data-font="garamond"] .reading-font { font-family: 'EB Garamond', Georgia, serif; }
+  html[data-font="cormorant"] .reading-font { font-family: 'Cormorant Garamond', Georgia, serif; }
+  html[data-font="fraunces"] .reading-font { font-family: 'Fraunces', Georgia, serif; }
+  html[data-font="source-sans"] .reading-font { font-family: 'Source Sans 3', system-ui, sans-serif; }
+  html[data-font="atkinson"] .reading-font { font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; }
+  html[data-font="dyslexic"] .reading-font { font-family: 'OpenDyslexic', 'Inter', sans-serif; letter-spacing: 0.01em; }
+}
+
+@layer utilities {
+  .reading-surface { background: hsl(var(--reading-bg)); }
+  .tension-gradient {
+    background: linear-gradient(90deg,
+      hsl(var(--tension-low)) 0%,
+      hsl(var(--tension-mid)) 50%,
+      hsl(var(--tension-high)) 100%);
+  }
+  .text-balance { text-wrap: balance; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { scrollbar-width: none; }
+}
