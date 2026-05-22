@@ -10,6 +10,7 @@ import { usePrefs } from "@/lib/reader-prefs";
 import { CinematicIntro } from "@/components/CinematicIntro";
 import { ReaderSidebar } from "@/components/ReaderSidebar";
 import { ReadingBlock } from "@/components/ReadingBlock";
+import { ReadingFlow } from "@/components/ReadingFlow";
 import { TensionRibbon } from "@/components/TensionRibbon";
 import { ChapterRecapCard } from "@/components/ChapterRecapCard";
 import { ChapterCompleteCard } from "@/components/ChapterCompleteCard";
@@ -78,10 +79,21 @@ export default function Reader() {
   const block = blocks[Math.min(blockIdx, blocks.length - 1)];
   const prevBlock = blockIdx > 0 ? blocks[blockIdx - 1] : null;
   const nextBlock = blockIdx < blocks.length - 1 ? blocks[blockIdx + 1] : null;
+  const flowCount = prefs.readingMode === "flow" ? Math.max(1, prefs.flowLines) : 1;
+  const visibleBlocks = useMemo(
+    () => blocks.slice(blockIdx, Math.min(blocks.length, blockIdx + flowCount)),
+    [blocks, blockIdx, flowCount]
+  );
 
   const blockMs = useMemo(
-    () => block ? estimateBlockMs(block.text, prefs.wpm, block.isParagraphEnd) : 1000,
-    [block, prefs.wpm]
+    () => {
+      if (!block) return 1000;
+      if (prefs.readingMode === "flow") {
+        return visibleBlocks.reduce((sum, item) => sum + estimateBlockMs(item.text, prefs.wpm, item.isParagraphEnd), 0);
+      }
+      return estimateBlockMs(block.text, prefs.wpm, block.isParagraphEnd);
+    },
+    [block, prefs.readingMode, prefs.wpm, visibleBlocks]
   );
 
   function finishIntro() {
@@ -121,7 +133,7 @@ export default function Reader() {
       } else {
         // Record this block as read
         if (block) {
-          const words = block.text.trim().split(/\s+/).filter(Boolean).length;
+          const words = visibleBlocks.reduce((sum, item) => sum + item.text.trim().split(/\s+/).filter(Boolean).length, 0);
           const totalBlocksAcrossBook = book.chapters.reduce((s, _, i) => s + (i === chapterIdx ? blocks.length : Math.max(1, book.chapters[i].scenes.length * 4)), 0);
           const readSoFar = book.chapters.slice(0, chapterIdx).reduce((s, _, i) => s + Math.max(1, book.chapters[i].scenes.length * 4), 0) + (blockIdx + 1);
           const pct = Math.min(1, readSoFar / Math.max(1, totalBlocksAcrossBook));
@@ -137,7 +149,7 @@ export default function Reader() {
           });
         }
         if (blockIdx < blocks.length - 1) {
-          setBlockIdx(i => i + 1);
+          setBlockIdx(i => Math.min(blocks.length - 1, i + flowCount));
         } else if (chapterIdx < book.chapters.length - 1) {
           // Chapter finished — celebrate before moving on
           recordChapterFinished(book.id, false);
@@ -152,7 +164,7 @@ export default function Reader() {
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [paused, stage, blockMs, blockIdx, chapterIdx, blocks.length, block, book, blocks]);
+  }, [paused, stage, blockMs, blockIdx, chapterIdx, blocks.length, block, book, blocks, flowCount, visibleBlocks]);
 
   // Keyboard
   useEffect(() => {
@@ -174,7 +186,7 @@ export default function Reader() {
     setLookupLoading(true);
     setLookupResult(null);
     setLookupSaved(false);
-    lookupWord(clean, book, block?.text ?? "").then(res => {
+    lookupWord(clean, book, visibleBlocks.map(item => item.text).join(" ")).then(res => {
       setLookupLoading(false);
       if (res) {
         setLookupResult(res);
@@ -290,18 +302,18 @@ export default function Reader() {
         className="flex-1 flex items-center justify-center px-6 cursor-pointer"
         onClick={unlockAudioAndToggle}
       >
-        <div className="reading-font w-full flex flex-col items-center gap-5" style={{ maxWidth: `${prefs.width}px` }}>
+        <div className="w-full flex flex-col items-center gap-5" style={{ maxWidth: `${prefs.width}px` }}>
           {/* Previous (dim) */}
           <div className="h-6 w-full text-center">
             <AnimatePresence mode="wait">
-              {prefs.showContext && prevBlock && (
+              {prefs.readingMode === "spotlight" && prefs.showContext && prevBlock && (
                 <motion.p
                   key={`prev-${chapterIdx}-${blockIdx}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: prefs.contextOpacity, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="font-display text-xs md:text-sm leading-snug truncate px-4"
+                  className="reading-copy text-xs md:text-sm leading-snug truncate px-4"
                   style={{ color: "hsl(var(--reading-dim))" }}
                 >
                   {trimPreview(prevBlock.text)}
@@ -313,30 +325,43 @@ export default function Reader() {
           {/* Focus block */}
           <AnimatePresence mode="wait">
             {block && (
-              <ReadingBlock
-                key={`${chapterIdx}-${blockIdx}`}
-                blockKey={`${chapterIdx}-${blockIdx}`}
-                block={block}
-                progress={blockProgress}
-                highlight={prefs.highlight}
-                fontSize={prefs.fontSize}
-                lineHeight={prefs.lineHeight}
-                onWordTap={handleWordTap}
-              />
+              prefs.readingMode === "flow" ? (
+                <ReadingFlow
+                  key={`${chapterIdx}-${blockIdx}-flow`}
+                  blockKey={`${chapterIdx}-${blockIdx}-flow-${prefs.flowLines}`}
+                  blocks={visibleBlocks}
+                  highlightProgress={blockProgress}
+                  highlight={prefs.highlight}
+                  fontSize={prefs.fontSize}
+                  lineHeight={prefs.lineHeight}
+                  onWordTap={handleWordTap}
+                />
+              ) : (
+                <ReadingBlock
+                  key={`${chapterIdx}-${blockIdx}`}
+                  blockKey={`${chapterIdx}-${blockIdx}`}
+                  block={block}
+                  progress={blockProgress}
+                  highlight={prefs.highlight}
+                  fontSize={prefs.fontSize}
+                  lineHeight={prefs.lineHeight}
+                  onWordTap={handleWordTap}
+                />
+              )
             )}
           </AnimatePresence>
 
           {/* Next (dim) */}
           <div className="h-6 w-full text-center">
             <AnimatePresence mode="wait">
-              {prefs.showContext && nextBlock && (
+              {prefs.readingMode === "spotlight" && prefs.showContext && nextBlock && (
                 <motion.p
                   key={`next-${chapterIdx}-${blockIdx}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: prefs.contextOpacity, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-                  className="font-display text-xs md:text-sm leading-snug truncate px-4"
+                  className="reading-copy text-xs md:text-sm leading-snug truncate px-4"
                   style={{ color: "hsl(var(--reading-dim))" }}
                 >
                   {trimPreview(nextBlock.text)}

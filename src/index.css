@@ -241,24 +241,34 @@
     font-optical-sizing: auto;
   }
 
-  /* Per-data-font overrides for the reading column ONLY (.reading-font) */
-  html[data-font="serif"] .reading-font,
-  html[data-font="lora"] .reading-font { font-family: 'Lora', 'Fraunces', Georgia, serif; }
-  html[data-font="sans"] .reading-font,
-  html[data-font="inter"] .reading-font { font-family: 'Inter', system-ui, sans-serif; }
-  html[data-font="literata"] .reading-font { font-family: 'Literata', Georgia, serif; }
-  html[data-font="merriweather"] .reading-font { font-family: 'Merriweather', Georgia, serif; }
-  html[data-font="crimson"] .reading-font { font-family: 'Crimson Text', Georgia, serif; }
-  html[data-font="libre"] .reading-font { font-family: 'Libre Baskerville', Georgia, serif; }
-  html[data-font="source-serif"] .reading-font { font-family: 'Source Serif 4', Georgia, serif; }
-  html[data-font="spectral"] .reading-font { font-family: 'Spectral', Georgia, serif; }
-  html[data-font="vollkorn"] .reading-font { font-family: 'Vollkorn', Georgia, serif; }
-  html[data-font="garamond"] .reading-font { font-family: 'EB Garamond', Georgia, serif; }
-  html[data-font="cormorant"] .reading-font { font-family: 'Cormorant Garamond', Georgia, serif; }
-  html[data-font="fraunces"] .reading-font { font-family: 'Fraunces', Georgia, serif; }
-  html[data-font="source-sans"] .reading-font { font-family: 'Source Sans 3', system-ui, sans-serif; }
-  html[data-font="atkinson"] .reading-font { font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; }
-  html[data-font="dyslexic"] .reading-font { font-family: 'OpenDyslexic', 'Inter', sans-serif; letter-spacing: 0.01em; }
+  :root {
+    --reader-font-family: 'Lora', 'Fraunces', Georgia, serif;
+  }
+
+  /* Reading-font changes apply only to the prose, not labels or controls. */
+  html[data-font="lora"] { --reader-font-family: 'Lora', 'Fraunces', Georgia, serif; }
+  html[data-font="literata"] { --reader-font-family: 'Literata', Georgia, serif; }
+  html[data-font="merriweather"] { --reader-font-family: 'Merriweather', Georgia, serif; }
+  html[data-font="crimson"] { --reader-font-family: 'Crimson Text', Georgia, serif; }
+  html[data-font="libre"] { --reader-font-family: 'Libre Baskerville', Georgia, serif; }
+  html[data-font="source-serif"] { --reader-font-family: 'Source Serif 4', Georgia, serif; }
+  html[data-font="spectral"] { --reader-font-family: 'Spectral', Georgia, serif; }
+  html[data-font="vollkorn"] { --reader-font-family: 'Vollkorn', Georgia, serif; }
+  html[data-font="garamond"] { --reader-font-family: 'EB Garamond', Georgia, serif; }
+  html[data-font="cormorant"] { --reader-font-family: 'Cormorant Garamond', Georgia, serif; }
+  html[data-font="fraunces"] { --reader-font-family: 'Fraunces', Georgia, serif; }
+  html[data-font="inter"] { --reader-font-family: 'Inter', system-ui, sans-serif; }
+  html[data-font="source-sans"] { --reader-font-family: 'Source Sans 3', system-ui, sans-serif; }
+  html[data-font="atkinson"] { --reader-font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; }
+  html[data-font="dyslexic"] { --reader-font-family: 'OpenDyslexic', 'Atkinson Hyperlegible', 'Inter', sans-serif; }
+
+  .reading-copy {
+    font-family: var(--reader-font-family);
+  }
+
+  html[data-font="dyslexic"] .reading-copy {
+    letter-spacing: 0.01em;
+  }
 }
 
 @layer utilities {

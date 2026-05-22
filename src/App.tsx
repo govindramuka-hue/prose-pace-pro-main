@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import Reader from "./pages/Reader.tsx";
+import DocumentReader from "./pages/DocumentReader.tsx";
 import Dictionary from "./pages/Dictionary.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/dictionary" element={<Dictionary />} />
           <Route path="/read" element={<Reader />} />
           <Route path="/read/:id" element={<Reader />} />
+          <Route path="/doc/:id" element={<DocumentReader />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

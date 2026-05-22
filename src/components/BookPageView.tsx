@@ -65,7 +65,7 @@ export function BookPageView({
                   key={i}
                   ref={isCurrent ? currentRef : undefined}
                   onClick={() => { onJump(i); onClose(); }}
-                  className={`cursor-pointer rounded-md px-3 py-2 transition-colors leading-relaxed font-display ${
+                  className={`reading-copy cursor-pointer rounded-md px-3 py-2 transition-colors leading-relaxed ${
                     b.type === "quote" ? "italic" : ""
                   } ${b.type === "dialogue" ? "font-medium" : ""}`}
                   style={{

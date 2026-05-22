@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, BookMarked, BookOpen, Check, Flame, Gauge, Pause, Play, RotateCcw, Search, Settings2, Volume2, Wind } from "lucide-react";
+import { ArrowRight, BookMarked, BookOpen, Check, FileText, Flame, Gauge, Pause, Play, RotateCcw, Search, Settings2, Upload, Volume2, Wind } from "lucide-react";
 import { books } from "@/data/book";
 import { useEngagement } from "@/lib/engagement";
-import { AMBIENT_OPTIONS, FONT_OPTIONS, THEME_OPTIONS, usePrefs, type Ambient, type Theme } from "@/lib/reader-prefs";
+import { AMBIENT_OPTIONS, THEME_OPTIONS, usePrefs, type Ambient, type Theme } from "@/lib/reader-prefs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ReadingBlock } from "@/components/ReadingBlock";
+import { FontPicker } from "@/components/FontPicker";
+import { ReadingFlow } from "@/components/ReadingFlow";
+import { ReadingModeControl } from "@/components/ReadingModeControl";
+import { UploadDialog } from "@/components/UploadDialog";
 import { estimateBlockMs, type Block } from "@/lib/smart-chunker";
+import { listDocs, type DocRecord } from "@/lib/db";
 
 const COVER_THEMES: Record<string, { from: string; via: string; to: string; accentA: string; accentB: string; tag: string }> = {
   "happy-prince": {
@@ -77,9 +82,15 @@ export default function Index() {
   const [query, setQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [docs, setDocs] = useState<DocRecord[]>([]);
   const lastBook = engage.lastBookId ? books.find(b => b.id === engage.lastBookId) : undefined;
   const lastProgress = lastBook ? engage.bookProgress[lastBook.id] : undefined;
   const lastChapter = lastBook && lastProgress ? lastBook.chapters[Math.min(lastProgress.chapterIdx, lastBook.chapters.length - 1)] : undefined;
+
+  useEffect(() => {
+    listDocs().then(setDocs).catch(() => setDocs([]));
+  }, [uploadOpen]);
 
   const filteredBooks = useMemo(() => {
     const clean = query.trim().toLowerCase();
@@ -119,6 +130,7 @@ export default function Index() {
             </div>
           )}
           <IconButton label="Dictionary" onClick={() => navigate("/dictionary")} icon={<BookMarked className="h-4 w-4" />} />
+          <IconButton label="Add document" onClick={() => setUploadOpen(true)} icon={<Upload className="h-4 w-4" />} />
           <IconButton label="Reading speed" onClick={() => setSpeedOpen(true)} icon={<Gauge className="h-4 w-4" />} />
           <IconButton label="Settings" onClick={() => setSettingsOpen(true)} icon={<Settings2 className="h-4 w-4" />} />
         </div>
@@ -176,6 +188,69 @@ export default function Index() {
           </motion.div>
         </section>
       )}
+
+      <section className="px-6 pb-14 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-1">My library</div>
+            <h2 className="font-display text-2xl leading-tight">Your documents</h2>
+          </div>
+          <Button onClick={() => setUploadOpen(true)} className="rounded-full">
+            <Upload className="h-4 w-4 mr-2" />
+            Add
+          </Button>
+        </div>
+
+        {docs.length === 0 ? (
+          <button
+            onClick={() => setUploadOpen(true)}
+            className="w-full rounded-2xl border border-dashed border-border bg-card/60 px-6 py-10 text-left hover:border-primary/50 transition-colors"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="font-display text-2xl mb-2">Bring your own reading</div>
+                <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                  Upload PDFs, EPUBs, Word docs, text files, web exports, or scanned pages and read them with Lumen's pacing, dictionary, recaps, and tension map.
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5" />
+              </div>
+            </div>
+          </button>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {docs.map(doc => (
+              <button
+                key={doc.id}
+                onClick={() => navigate(`/doc/${doc.id}`)}
+                className="rounded-2xl border border-border bg-card p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all"
+                style={{ boxShadow: "var(--shadow-card)" }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80 mb-2">
+                      {doc.folder || (doc.kind === "study" ? "study material" : "personal document")}
+                    </div>
+                    <h3 className="font-display text-2xl leading-tight truncate">{doc.title}</h3>
+                  </div>
+                  <div className="h-10 w-10 rounded-full border border-border bg-secondary inline-flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span>{doc.wordCount.toLocaleString()} words</span>
+                  <span>{Math.max(1, Math.round(doc.wordCount / prefs.wpm))} min</span>
+                  <span>{doc.source}</span>
+                </div>
+                <div className="mt-5 inline-flex items-center gap-2 text-primary font-medium">
+                  Open in Lumen <ArrowRight className="h-4 w-4" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="px-6 pb-24 max-w-5xl mx-auto">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
@@ -258,6 +333,14 @@ export default function Index() {
 
       <HomeSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} prefs={prefs} setPrefs={setPrefs} />
       <SpeedCheckDialog open={speedOpen} onOpenChange={setSpeedOpen} currentWpm={prefs.wpm} onApply={(wpm) => setPrefs({ wpm })} />
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onCreated={(docId) => {
+          setUploadOpen(false);
+          listDocs().then(setDocs).finally(() => navigate(`/doc/${docId}`));
+        }}
+      />
     </div>
   );
 }
@@ -359,6 +442,11 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
     type: "narrative",
     isParagraphEnd: true,
   };
+  const flowPreview: Block[] = [
+    previewBlock,
+    { text: "A second line gives the thought room to breathe.", type: "narrative", isParagraphEnd: false },
+    { text: "The rhythm stays calm while the page moves forward.", type: "narrative", isParagraphEnd: true },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -368,30 +456,41 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
         </DialogHeader>
         <div className="grid gap-0 md:grid-cols-[1fr_1.1fr]">
           <div className="reading-surface px-6 py-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-border">
-            <div className="reading-font w-full text-center flex flex-col items-center gap-5" style={{ maxWidth: `${Math.min(420, prefs.width)}px` }}>
+            <div className="w-full text-center flex flex-col items-center gap-5" style={{ maxWidth: `${Math.min(420, prefs.width)}px` }}>
               <div className="text-[10px] uppercase tracking-[0.3em] mb-5" style={{ color: "hsl(var(--reading-dim))" }}>Preview</div>
               <div className="h-6 w-full text-center">
-                {prefs.showContext && (
+                {prefs.readingMode === "spotlight" && prefs.showContext && (
                   <p
-                    className="font-display text-xs leading-snug truncate px-4"
+                    className="reading-copy text-xs leading-snug truncate px-4"
                     style={{ color: "hsl(var(--reading-dim))", opacity: prefs.contextOpacity }}
                   >
                     Before it, the page grows quiet.
                   </p>
                 )}
               </div>
-              <ReadingBlock
-                block={previewBlock}
-                blockKey={`${prefs.font}-${prefs.fontSize}-${prefs.lineHeight}-${prefs.highlight}`}
-                progress={prefs.highlight ? 0.58 : 0}
-                highlight={prefs.highlight}
-                fontSize={Math.min(40, prefs.fontSize)}
-                lineHeight={prefs.lineHeight}
-              />
+              {prefs.readingMode === "flow" ? (
+                <ReadingFlow
+                  blocks={flowPreview.slice(0, Math.min(flowPreview.length, prefs.flowLines))}
+                  blockKey={`${prefs.font}-${prefs.fontSize}-${prefs.lineHeight}-${prefs.highlight}-${prefs.flowLines}`}
+                  highlightProgress={prefs.highlight ? 0.58 : 0}
+                  highlight={prefs.highlight}
+                  fontSize={Math.min(40, prefs.fontSize)}
+                  lineHeight={prefs.lineHeight}
+                />
+              ) : (
+                <ReadingBlock
+                  block={previewBlock}
+                  blockKey={`${prefs.font}-${prefs.fontSize}-${prefs.lineHeight}-${prefs.highlight}`}
+                  progress={prefs.highlight ? 0.58 : 0}
+                  highlight={prefs.highlight}
+                  fontSize={Math.min(40, prefs.fontSize)}
+                  lineHeight={prefs.lineHeight}
+                />
+              )}
               <div className="h-6 w-full text-center">
-                {prefs.showContext && (
+                {prefs.readingMode === "spotlight" && prefs.showContext && (
                   <p
-                    className="font-display text-xs leading-snug truncate px-4"
+                    className="reading-copy text-xs leading-snug truncate px-4"
                     style={{ color: "hsl(var(--reading-dim))", opacity: prefs.contextOpacity }}
                   >
                     After it, the next line begins to glow.
@@ -432,21 +531,17 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
                 <input type="range" min={1.1} max={1.8} step={0.05} value={prefs.lineHeight} onChange={e => setPrefs({ lineHeight: +e.target.value })} className="w-full accent-primary" />
               </SettingGroup>
               <SettingGroup label="Font">
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {FONT_OPTIONS.map(font => (
-                    <button key={font.id} onClick={() => setPrefs({ font: font.id })} className={`h-9 rounded-full border text-xs px-3 ${prefs.font === font.id ? "bg-primary text-primary-foreground border-primary" : "border-border bg-secondary text-secondary-foreground"}`}>
-                      {font.label}
-                    </button>
-                  ))}
-                </div>
+                <FontPicker value={prefs.font} onChange={(font) => setPrefs({ font })} />
               </SettingGroup>
             </div>
             <SettingGroup label="Reading aids">
               <div className="grid gap-2 sm:grid-cols-2">
                 <ToggleButton active={prefs.highlight} onClick={() => setPrefs({ highlight: !prefs.highlight })} label="Smooth highlight" />
-                <ToggleButton active={prefs.showContext} onClick={() => setPrefs({ showContext: !prefs.showContext })} label="Surrounding lines" />
+                {prefs.readingMode === "spotlight" && (
+                  <ToggleButton active={prefs.showContext} onClick={() => setPrefs({ showContext: !prefs.showContext })} label="Surrounding lines" />
+                )}
               </div>
-              {prefs.showContext && (
+              {prefs.readingMode === "spotlight" && prefs.showContext && (
                 <div className="mt-4">
                   <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
                     Context opacity {Math.round(prefs.contextOpacity * 100)}%
@@ -454,6 +549,9 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
                   <input type="range" min={0.1} max={1} step={0.05} value={prefs.contextOpacity} onChange={e => setPrefs({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
                 </div>
               )}
+            </SettingGroup>
+            <SettingGroup label="Reading mode">
+              <ReadingModeControl prefs={prefs} setPrefs={setPrefs} />
             </SettingGroup>
             <SettingGroup label="Ambience">
               <div className="grid grid-cols-4 gap-2">
@@ -543,7 +641,7 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
             <DialogTitle className="font-display text-2xl" style={{ color: "hsl(var(--reading-text))" }}>Reading speed check</DialogTitle>
           </DialogHeader>
           <div className="flex-1 flex items-center justify-center px-6 py-8">
-            <div className="reading-font w-full max-w-3xl flex flex-col items-center gap-5">
+            <div className="w-full max-w-3xl flex flex-col items-center gap-5">
               <div className="h-6 w-full text-center">
                 <AnimatePresence mode="wait">
                   {prevBlock && (
@@ -552,7 +650,7 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 0.45, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      className="font-display text-sm leading-snug truncate px-4"
+                      className="reading-copy text-sm leading-snug truncate px-4"
                       style={{ color: "hsl(var(--reading-dim))" }}
                     >
                       {trimLine(prevBlock.text, 80)}
@@ -581,7 +679,7 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 0.45, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      className="font-display text-sm leading-snug truncate px-4"
+                      className="reading-copy text-sm leading-snug truncate px-4"
                       style={{ color: "hsl(var(--reading-dim))" }}
                     >
                       {trimLine(nextBlock.text, 80)}

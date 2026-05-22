@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,19 +21,22 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
   const [progressMsg, setProgressMsg] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [pasteTitle, setPasteTitle] = useState("");
+  const [fileTitle, setFileTitle] = useState("");
+  const [folder, setFolder] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
     setBusy(true);
     setProgress(0);
-    setProgressMsg("Preparing…");
+    setProgressMsg("Preparing...");
     try {
       const ing = await ingestFile(file, (pct, msg) => {
         setProgress(Math.round(pct * 100));
         setProgressMsg(msg);
       });
-      setProgressMsg("Analyzing narrative tension…");
-      const doc = await buildAndSaveDoc(ing);
+      setProgressMsg("Structuring the text...");
+      const doc = await buildAndSaveDoc(ing, { title: fileTitle, folder });
+      setFileTitle("");
       onCreated(doc.id);
       onOpenChange(false);
     } catch (e) {
@@ -47,10 +50,10 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
   async function handlePaste() {
     if (!pasteText.trim()) return;
     setBusy(true);
-    setProgressMsg("Processing…");
+    setProgressMsg("Structuring the text...");
     try {
       const ing = await ingestPasted(pasteText, pasteTitle.trim() || "Pasted text");
-      const doc = await buildAndSaveDoc(ing);
+      const doc = await buildAndSaveDoc(ing, { folder });
       setPasteText("");
       setPasteTitle("");
       onCreated(doc.id);
@@ -62,7 +65,7 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!busy) onOpenChange(o); }}>
-      <DialogContent className="max-w-lg bg-card border-border">
+      <DialogContent className="max-w-xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Add to your library</DialogTitle>
         </DialogHeader>
@@ -74,7 +77,7 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
               <span className="text-sm">{progressMsg}</span>
             </div>
             {progress > 0 && <Progress value={progress} />}
-            <p className="text-xs text-muted-foreground">Large PDFs and scanned images take longer. Hang tight.</p>
+            <p className="text-xs text-muted-foreground">Large PDFs, EPUBs, and scanned images can take a little longer.</p>
           </div>
         ) : (
           <Tabs defaultValue="file">
@@ -84,6 +87,10 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
             </TabsList>
 
             <TabsContent value="file" className="space-y-4 pt-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input placeholder="Display title (optional)" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} />
+                <Input placeholder="Folder (optional)" value={folder} onChange={(e) => setFolder(e.target.value)} />
+              </div>
               <button
                 onClick={() => fileRef.current?.click()}
                 className="w-full border-2 border-dashed border-border hover:border-primary transition-colors rounded-lg p-8 flex flex-col items-center gap-3 group"
@@ -91,13 +98,13 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
                 <Upload className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors" />
                 <div className="text-center">
                   <div className="font-medium">Click to choose a file</div>
-                  <div className="text-xs text-muted-foreground mt-1">PDF · DOCX · TXT · Image (JPG/PNG)</div>
+                  <div className="text-xs text-muted-foreground mt-1">PDF · EPUB · DOCX · TXT/MD · HTML · RTF · Image OCR</div>
                 </div>
               </button>
               <input
                 ref={fileRef}
                 type="file"
-                accept=".pdf,.docx,.txt,.md,image/*"
+                accept=".pdf,.epub,.docx,.txt,.md,.html,.htm,.rtf,image/*"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -106,22 +113,19 @@ export function UploadDialog({ open, onOpenChange, onCreated }: Props) {
               />
               <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> PDFs</div>
-                <div className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> Word docs</div>
-                <div className="flex items-center gap-2"><ImageIcon className="h-3.5 w-3.5" /> Image OCR</div>
+                <div className="flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> EPUB/DOCX</div>
+                <div className="flex items-center gap-2"><ImageIcon className="h-3.5 w-3.5" /> OCR</div>
               </div>
             </TabsContent>
 
             <TabsContent value="paste" className="space-y-3 pt-4">
-              <Input
-                placeholder="Title (optional)"
-                value={pasteTitle}
-                onChange={(e) => setPasteTitle(e.target.value)}
-              />
+              <Input placeholder="Title (optional)" value={pasteTitle} onChange={(e) => setPasteTitle(e.target.value)} />
+              <Input placeholder="Folder (optional)" value={folder} onChange={(e) => setFolder(e.target.value)} />
               <Textarea
-                placeholder="Paste any text here — an article, a chapter, anything."
+                placeholder="Paste any text here - an article, a chapter, notes, or a research excerpt."
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                className="min-h-[200px] resize-none"
+                className="min-h-[220px] resize-none"
               />
               <Button onClick={handlePaste} disabled={!pasteText.trim()} className="w-full">
                 Add to library

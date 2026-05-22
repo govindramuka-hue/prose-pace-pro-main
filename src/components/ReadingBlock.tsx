@@ -63,7 +63,7 @@ export function ReadingBlock({ block, blockKey, progress, highlight, fontSize, l
       )}
 
       <p
-        className={`font-display ${isQuote ? "italic" : ""} ${isDialogue ? "font-medium" : ""} text-balance`}
+        className={`reading-copy ${isQuote ? "italic" : ""} ${isDialogue ? "font-medium" : ""} text-balance`}
         style={{
           fontSize: `${effFontSize}px`,
           lineHeight: effLineHeight,

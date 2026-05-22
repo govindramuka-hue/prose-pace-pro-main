@@ -1,9 +1,10 @@
-// Sidebar with three tabs: Chapters, Characters, Settings.
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Users, Settings2, X, Check, Volume2, VolumeX } from "lucide-react";
 import type { Book, Chapter } from "@/data/book";
-import { THEME_OPTIONS, AMBIENT_OPTIONS, FONT_OPTIONS, type Prefs } from "@/lib/reader-prefs";
+import { THEME_OPTIONS, AMBIENT_OPTIONS, type Prefs } from "@/lib/reader-prefs";
+import { FontPicker } from "@/components/FontPicker";
+import { ReadingModeControl } from "@/components/ReadingModeControl";
 
 type Tab = "chapters" | "characters" | "settings";
 
@@ -24,40 +25,33 @@ export function ReaderSidebar({ open, onClose, book, currentChapterIdx, onJumpCh
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={onClose}
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
           <motion.aside
-            initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 240 }}
             className="fixed top-0 left-0 bottom-0 z-50 w-[88vw] max-w-md bg-card border-r border-border flex flex-col"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{book.author}</div>
                 <div className="font-display text-lg leading-tight mt-0.5">{book.title}</div>
               </div>
-              <button onClick={onClose} className="p-2 rounded-full hover:bg-muted">
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-muted" aria-label="Close menu">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Tabs */}
             <div className="grid grid-cols-3 border-b border-border">
               <TabBtn icon={<BookOpen className="h-4 w-4" />} label="Chapters" active={tab === "chapters"} onClick={() => setTab("chapters")} />
               <TabBtn icon={<Users className="h-4 w-4" />} label="Cast" active={tab === "characters"} onClick={() => setTab("characters")} />
               <TabBtn icon={<Settings2 className="h-4 w-4" />} label="Settings" active={tab === "settings"} onClick={() => setTab("settings")} />
             </div>
 
-            {/* Content */}
             <div className="flex-1 overflow-y-auto">
-              {tab === "chapters" && (
-                <ChapterList chapters={book.chapters} currentIdx={currentChapterIdx} onJump={(i) => { onJumpChapter(i); onClose(); }} />
-              )}
+              {tab === "chapters" && <ChapterList chapters={book.chapters} currentIdx={currentChapterIdx} onJump={(i) => { onJumpChapter(i); onClose(); }} />}
               {tab === "characters" && <CharacterList characters={book.characters} />}
               {tab === "settings" && <SettingsPanel prefs={prefs} setPrefs={setPrefs} />}
             </div>
@@ -88,13 +82,9 @@ function ChapterList({ chapters, currentIdx, onJump }: { chapters: Chapter[]; cu
         <li key={c.number}>
           <button
             onClick={() => onJump(i)}
-            className={`w-full text-left px-5 py-3 flex items-baseline gap-3 hover:bg-muted/60 transition-colors ${
-              i === currentIdx ? "bg-muted/40" : ""
-            }`}
+            className={`w-full text-left px-5 py-3 flex items-baseline gap-3 hover:bg-muted/60 transition-colors ${i === currentIdx ? "bg-muted/40" : ""}`}
           >
-            <span className={`text-xs tabular-nums ${i === currentIdx ? "text-primary" : "text-muted-foreground"}`}>
-              {String(c.number).padStart(2, "0")}
-            </span>
+            <span className={`text-xs tabular-nums ${i === currentIdx ? "text-primary" : "text-muted-foreground"}`}>{String(c.number).padStart(2, "0")}</span>
             <span className="flex-1">
               <span className={`font-display text-base block leading-tight ${i === currentIdx ? "text-primary" : "text-foreground"}`}>
                 {c.title.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase())}
@@ -143,16 +133,13 @@ function CharacterList({ characters }: { characters: { name: string; role: strin
 export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }) {
   return (
     <div className="p-5 space-y-7">
-      {/* Theme */}
       <Section label="Theme">
         <div className="grid grid-cols-4 gap-2">
           {THEME_OPTIONS.map(t => (
             <button
               key={t.id}
               onClick={() => setPrefs({ theme: t.id })}
-              className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${
-                prefs.theme === t.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/40"
-              }`}
+              className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${prefs.theme === t.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/40"}`}
             >
               <div className="w-8 h-8 rounded-full border border-border" style={{ background: t.swatch }} />
               <span className="text-[10px] tracking-wide">{t.label}</span>
@@ -161,79 +148,50 @@ export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p:
         </div>
       </Section>
 
-      {/* Speed */}
-      <Section label={`Speed — ${prefs.wpm} WPM`}>
-        <input
-          type="range" min={150} max={700} step={10}
-          value={prefs.wpm} onChange={e => setPrefs({ wpm: +e.target.value })}
-          className="w-full accent-primary"
-        />
+      <Section label={`Speed - ${prefs.wpm} WPM`}>
+        <input type="range" min={150} max={700} step={10} value={prefs.wpm} onChange={e => setPrefs({ wpm: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
-      {/* Word highlight */}
+      <Section label="Reading mode">
+        <ReadingModeControl prefs={prefs} setPrefs={setPrefs} />
+      </Section>
+
       <Section label="Smooth highlight">
         <Toggle checked={prefs.highlight} onChange={v => setPrefs({ highlight: v })} />
       </Section>
 
-      {/* Context lines (prev + next) */}
-      <Section label="Show surrounding lines">
-        <Toggle checked={prefs.showContext} onChange={v => setPrefs({ showContext: v })} />
-      </Section>
-
-      {prefs.showContext && (
-        <Section label={`Surrounding line opacity — ${Math.round(prefs.contextOpacity * 100)}%`}>
-          <input
-            type="range" min={0.1} max={1} step={0.05}
-            value={prefs.contextOpacity}
-            onChange={e => setPrefs({ contextOpacity: +e.target.value })}
-            className="w-full accent-primary"
-          />
-        </Section>
+      {prefs.readingMode === "spotlight" && (
+        <>
+          <Section label="Show surrounding lines">
+            <Toggle checked={prefs.showContext} onChange={v => setPrefs({ showContext: v })} />
+          </Section>
+          {prefs.showContext && (
+            <Section label={`Surrounding line opacity - ${Math.round(prefs.contextOpacity * 100)}%`}>
+              <input type="range" min={0.1} max={1} step={0.05} value={prefs.contextOpacity} onChange={e => setPrefs({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
+            </Section>
+          )}
+        </>
       )}
 
-      {/* Typography */}
       <Section label="Font">
-        <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
-          {FONT_OPTIONS.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setPrefs({ font: f.id })}
-              className={`py-2 px-2 text-xs rounded-md border transition-colors ${
-                prefs.font === f.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-secondary-foreground border-border hover:bg-muted"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <FontPicker value={prefs.font} onChange={(font) => setPrefs({ font })} />
       </Section>
 
-      <Section label={`Text size — ${prefs.fontSize}px`}>
-        <input type="range" min={20} max={48} step={1} value={prefs.fontSize}
-          onChange={e => setPrefs({ fontSize: +e.target.value })}
-          className="w-full accent-primary" />
+      <Section label={`Text size - ${prefs.fontSize}px`}>
+        <input type="range" min={20} max={48} step={1} value={prefs.fontSize} onChange={e => setPrefs({ fontSize: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
-      <Section label={`Line height — ${prefs.lineHeight.toFixed(2)}`}>
-        <input type="range" min={1.1} max={1.8} step={0.05} value={prefs.lineHeight}
-          onChange={e => setPrefs({ lineHeight: +e.target.value })}
-          className="w-full accent-primary" />
+      <Section label={`Line height - ${prefs.lineHeight.toFixed(2)}`}>
+        <input type="range" min={1.1} max={1.8} step={0.05} value={prefs.lineHeight} onChange={e => setPrefs({ lineHeight: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
-      {/* Ambient */}
       <Section label="Ambience">
         <div className="grid grid-cols-4 gap-2 mb-3">
           {AMBIENT_OPTIONS.map(a => (
             <button
               key={a.id}
               onClick={() => setPrefs({ ambient: a.id })}
-              className={`py-2 text-[11px] rounded-md border transition-colors ${
-                prefs.ambient === a.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-secondary-foreground border-border hover:bg-muted"
-              }`}
+              className={`py-2 text-[11px] rounded-md border transition-colors ${prefs.ambient === a.id ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-secondary-foreground border-border hover:bg-muted"}`}
             >
               {a.label}
             </button>
@@ -241,9 +199,7 @@ export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p:
         </div>
         <div className="flex items-center gap-2">
           {prefs.ambientVolume === 0 ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4 text-muted-foreground" />}
-          <input type="range" min={0} max={1} step={0.05} value={prefs.ambientVolume}
-            onChange={e => setPrefs({ ambientVolume: +e.target.value })}
-            className="flex-1 accent-primary" />
+          <input type="range" min={0} max={1} step={0.05} value={prefs.ambientVolume} onChange={e => setPrefs({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
         </div>
       </Section>
     </div>
@@ -258,6 +214,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     </div>
   );
 }
+
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button

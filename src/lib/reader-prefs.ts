@@ -11,6 +11,7 @@ export type FontFamily =
 export type Ambient =
   | "silence" | "rain" | "fireplace" | "forest"
   | "ocean" | "cafe" | "lofi" | "noise";
+export type ReadingMode = "spotlight" | "flow";
 
 export interface Prefs {
   theme: Theme;
@@ -24,6 +25,8 @@ export interface Prefs {
   ambientVolume: number;   // 0..1
   showContext: boolean;     // show previous & next line previews
   contextOpacity: number;   // 0..1 opacity for those previews
+  readingMode: ReadingMode;
+  flowLines: number;
 }
 
 const KEY = "pt:prefs:v3";
@@ -40,6 +43,8 @@ const DEFAULTS: Prefs = {
   ambientVolume: 0.4,
   showContext: true,
   contextOpacity: 0.55,
+  readingMode: "spotlight",
+  flowLines: 6,
 };
 
 function load(): Prefs {
@@ -89,6 +94,24 @@ export const FONT_OPTIONS: { id: FontFamily; label: string }[] = [
   { id: "atkinson", label: "Atkinson" },
   { id: "dyslexic", label: "OpenDyslexic" },
 ];
+
+export const FONT_STACKS: Record<FontFamily, string> = {
+  lora: "'Lora', Georgia, serif",
+  literata: "'Literata', Georgia, serif",
+  merriweather: "'Merriweather', Georgia, serif",
+  crimson: "'Crimson Text', Georgia, serif",
+  libre: "'Libre Baskerville', Georgia, serif",
+  "source-serif": "'Source Serif 4', Georgia, serif",
+  spectral: "'Spectral', Georgia, serif",
+  vollkorn: "'Vollkorn', Georgia, serif",
+  garamond: "'EB Garamond', Georgia, serif",
+  cormorant: "'Cormorant Garamond', Georgia, serif",
+  fraunces: "'Fraunces', Georgia, serif",
+  inter: "'Inter', system-ui, sans-serif",
+  "source-sans": "'Source Sans 3', system-ui, sans-serif",
+  atkinson: "'Atkinson Hyperlegible', system-ui, sans-serif",
+  dyslexic: "'OpenDyslexic', 'Atkinson Hyperlegible', 'Inter', sans-serif",
+};
 
 // Ambient soundscapes — synthesized in-browser via Web Audio API.
 // No network dependency, no CORS issues, always works.

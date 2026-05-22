@@ -10,6 +10,8 @@ export interface DocPage {
 export interface DocRecord {
   id: string;
   title: string;
+  folder?: string;
+  kind?: "narrative" | "study" | "reference";
   source: "paste" | "pdf" | "docx" | "image" | "txt";
   createdAt: number;
   updatedAt: number;
@@ -22,6 +24,7 @@ export interface DocRecord {
   tensionScores: number[]; // length === sentences.length, 0..10
   peaks: number[]; // sentence indices
   coverHue: number; // 0-360 for gradient cover
+  sectionTitles?: { sentenceIdx: number; title: string }[];
 }
 
 export interface ProgressRecord {
