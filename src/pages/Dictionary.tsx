@@ -128,7 +128,7 @@ export default function Dictionary() {
 function WordDetailDialog({ word, onOpenChange }: { word: SavedWord | null; onOpenChange: (open: boolean) => void }) {
   return (
     <Dialog open={!!word} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg overflow-hidden bg-card border-border p-0">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-lg max-h-[86dvh] overflow-y-auto bg-card border-border p-0">
         {word && (
           <>
             <div className="reading-surface px-6 pt-8 pb-7 border-b border-border">
@@ -136,7 +136,7 @@ function WordDetailDialog({ word, onOpenChange }: { word: SavedWord | null; onOp
                 <div className="text-[10px] uppercase tracking-[0.3em] mb-3" style={{ color: "hsl(var(--reading-dim))" }}>
                   Saved word
                 </div>
-                <DialogTitle className="font-display text-5xl leading-none pr-8" style={{ color: "hsl(var(--reading-text))" }}>
+                <DialogTitle className="font-display text-4xl sm:text-5xl leading-none pr-8 break-words" style={{ color: "hsl(var(--reading-text))" }}>
                   {word.word}
                 </DialogTitle>
                 {word.partOfSpeech && (

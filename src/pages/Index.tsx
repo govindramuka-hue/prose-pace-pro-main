@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, BookMarked, BookOpen, Check, FileText, Flame, Gauge, Pause, Play, RotateCcw, Search, Settings2, Upload, Volume2, Wind } from "lucide-react";
+import { ArrowRight, BookMarked, BookOpen, Check, FileText, Flame, Gauge, Pause, Pencil, Play, RotateCcw, Search, Settings2, Trash2, Upload, Volume2, Wind } from "lucide-react";
 import { books } from "@/data/book";
 import { useEngagement } from "@/lib/engagement";
 import { AMBIENT_OPTIONS, THEME_OPTIONS, usePrefs, type Ambient, type Theme } from "@/lib/reader-prefs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ReadingBlock } from "@/components/ReadingBlock";
 import { FontPicker } from "@/components/FontPicker";
 import { ReadingFlow } from "@/components/ReadingFlow";
 import { ReadingModeControl } from "@/components/ReadingModeControl";
 import { UploadDialog } from "@/components/UploadDialog";
 import { estimateBlockMs, type Block } from "@/lib/smart-chunker";
-import { listDocs, type DocRecord } from "@/lib/db";
+import { deleteDoc, listDocs, updateDocMeta, type DocRecord } from "@/lib/db";
 
 const COVER_THEMES: Record<string, { from: string; via: string; to: string; accentA: string; accentB: string; tag: string }> = {
   "happy-prince": {
@@ -84,6 +85,7 @@ export default function Index() {
   const [speedOpen, setSpeedOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [docs, setDocs] = useState<DocRecord[]>([]);
+  const [manageDoc, setManageDoc] = useState<DocRecord | null>(null);
   const lastBook = engage.lastBookId ? books.find(b => b.id === engage.lastBookId) : undefined;
   const lastProgress = lastBook ? engage.bookProgress[lastBook.id] : undefined;
   const lastChapter = lastBook && lastProgress ? lastBook.chapters[Math.min(lastProgress.chapterIdx, lastBook.chapters.length - 1)] : undefined;
@@ -221,21 +223,33 @@ export default function Index() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {docs.map(doc => (
-              <button
+              <div
                 key={doc.id}
-                onClick={() => navigate(`/doc/${doc.id}`)}
                 className="rounded-2xl border border-border bg-card p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <button className="min-w-0 flex-1 text-left" onClick={() => navigate(`/doc/${doc.id}`)}>
                     <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80 mb-2">
                       {doc.folder || (doc.kind === "study" ? "study material" : "personal document")}
                     </div>
                     <h3 className="font-display text-2xl leading-tight truncate">{doc.title}</h3>
-                  </div>
-                  <div className="h-10 w-10 rounded-full border border-border bg-secondary inline-flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-4 w-4 text-primary" />
+                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setManageDoc(doc)}
+                      className="h-9 w-9 rounded-full hover:bg-muted inline-flex items-center justify-center"
+                      aria-label={`Rename ${doc.title}`}
+                    >
+                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => setManageDoc(doc)}
+                      className="h-9 w-9 rounded-full hover:bg-muted inline-flex items-center justify-center"
+                      aria-label={`Delete ${doc.title}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    </button>
                   </div>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3 text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -243,10 +257,10 @@ export default function Index() {
                   <span>{Math.max(1, Math.round(doc.wordCount / prefs.wpm))} min</span>
                   <span>{doc.source}</span>
                 </div>
-                <div className="mt-5 inline-flex items-center gap-2 text-primary font-medium">
+                <button onClick={() => navigate(`/doc/${doc.id}`)} className="mt-5 inline-flex items-center gap-2 text-primary font-medium">
                   Open in Lumen <ArrowRight className="h-4 w-4" />
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -341,7 +355,71 @@ export default function Index() {
           listDocs().then(setDocs).finally(() => navigate(`/doc/${docId}`));
         }}
       />
+      <DocumentManageDialog
+        doc={manageDoc}
+        onClose={() => setManageDoc(null)}
+        onSaved={async () => {
+          setManageDoc(null);
+          setDocs(await listDocs());
+        }}
+      />
     </div>
+  );
+}
+
+function DocumentManageDialog({ doc, onClose, onSaved }: { doc: DocRecord | null; onClose: () => void; onSaved: () => void }) {
+  const [title, setTitle] = useState("");
+  const [folder, setFolder] = useState("");
+
+  useEffect(() => {
+    setTitle(doc?.title ?? "");
+    setFolder(doc?.folder ?? "");
+  }, [doc]);
+
+  return (
+    <Dialog open={!!doc} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">Manage document</DialogTitle>
+        </DialogHeader>
+        {doc && (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Document name" />
+              <Input value={folder} onChange={(e) => setFolder(e.target.value)} placeholder="Folder" />
+            </div>
+            <div className="rounded-xl border border-border bg-secondary/50 p-4 text-xs text-muted-foreground">
+              {doc.wordCount.toLocaleString()} words · {doc.source.toUpperCase()}
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+              <Button
+                variant="outline"
+                className="rounded-full border-destructive/40 text-destructive hover:bg-destructive/10"
+                onClick={async () => {
+                  await deleteDoc(doc.id);
+                  onSaved();
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" className="rounded-full" onClick={onClose}>Cancel</Button>
+                <Button
+                  className="rounded-full"
+                  onClick={async () => {
+                    await updateDocMeta(doc.id, { title: title.trim() || doc.title, folder: folder.trim() || undefined });
+                    onSaved();
+                  }}
+                >
+                  Save changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -635,12 +713,12 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden bg-card border-border p-0">
-        <div className="reading-surface min-h-[70vh] flex flex-col">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl max-h-[92dvh] overflow-y-auto bg-card border-border p-0">
+        <div className="reading-surface min-h-[60vh] sm:min-h-[70vh] flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="font-display text-2xl" style={{ color: "hsl(var(--reading-text))" }}>Reading speed check</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 flex items-center justify-center px-6 py-8">
+          <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
             <div className="w-full max-w-3xl flex flex-col items-center gap-5">
               <div className="h-6 w-full text-center">
                 <AnimatePresence mode="wait">

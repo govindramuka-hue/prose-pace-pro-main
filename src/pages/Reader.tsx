@@ -11,7 +11,7 @@ import { CinematicIntro } from "@/components/CinematicIntro";
 import { ReaderSidebar } from "@/components/ReaderSidebar";
 import { ReadingBlock } from "@/components/ReadingBlock";
 import { ReadingFlow } from "@/components/ReadingFlow";
-import { TensionRibbon } from "@/components/TensionRibbon";
+import { TensionBar } from "@/components/TensionBar";
 import { ChapterRecapCard } from "@/components/ChapterRecapCard";
 import { ChapterCompleteCard } from "@/components/ChapterCompleteCard";
 import { AmbientPlayer } from "@/components/AmbientPlayer";
@@ -19,6 +19,7 @@ import { BookPageView } from "@/components/BookPageView";
 import { WordPopover } from "@/components/WordPopover";
 import { isWordSaved, lookupWord, saveWord, type MeaningResult } from "@/lib/dictionary";
 import { recordBlockRead, recordChapterFinished, loadEngage } from "@/lib/engagement";
+import { useFlowCount } from "@/hooks/use-flow-count";
 
 const PROG_KEY_PREFIX = "lumen:progress:";
 
@@ -79,7 +80,8 @@ export default function Reader() {
   const block = blocks[Math.min(blockIdx, blocks.length - 1)];
   const prevBlock = blockIdx > 0 ? blocks[blockIdx - 1] : null;
   const nextBlock = blockIdx < blocks.length - 1 ? blocks[blockIdx + 1] : null;
-  const flowCount = prefs.readingMode === "flow" ? Math.max(1, prefs.flowLines) : 1;
+  const effectiveFlowLines = useFlowCount(prefs.flowLines);
+  const flowCount = prefs.readingMode === "flow" ? Math.max(1, effectiveFlowLines) : 1;
   const visibleBlocks = useMemo(
     () => blocks.slice(blockIdx, Math.min(blocks.length, blockIdx + flowCount)),
     [blocks, blockIdx, flowCount]
@@ -118,7 +120,7 @@ export default function Reader() {
 
   // RAF sweep for highlight
   useEffect(() => {
-    if (paused || stage !== "reading") {
+    if (paused || stage !== "reading" || prefs.pacingMode === "manual") {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
@@ -164,19 +166,27 @@ export default function Reader() {
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [paused, stage, blockMs, blockIdx, chapterIdx, blocks.length, block, book, blocks, flowCount, visibleBlocks]);
+  }, [paused, stage, blockMs, blockIdx, chapterIdx, blocks.length, block, book, blocks, flowCount, visibleBlocks, prefs.pacingMode]);
 
   // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.code === "Space") { e.preventDefault(); setPaused(p => !p); }
-      if (e.code === "ArrowRight") setBlockIdx(i => Math.min(blocks.length - 1, i + 1));
-      if (e.code === "ArrowLeft")  setBlockIdx(i => Math.max(0, i - 1));
+      if (e.code === "ArrowRight") nextUnit();
+      if (e.code === "ArrowLeft")  prevUnit();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [blocks.length]);
+  }, [blocks.length, flowCount]);
+
+  function nextUnit() {
+    setBlockIdx(i => Math.min(blocks.length - 1, i + flowCount));
+  }
+
+  function prevUnit() {
+    setBlockIdx(i => Math.max(0, i - flowCount));
+  }
 
   function handleWordTap(word: string) {
     const clean = word.toLowerCase().replace(/[^a-z'-]/g, "");
@@ -198,6 +208,21 @@ export default function Reader() {
   function unlockAudioAndToggle() {
     setAudioUnlocked(true);
     setPaused(p => !p);
+  }
+
+  function handleReaderTap(e: React.MouseEvent<HTMLElement>) {
+    setAudioUnlocked(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x < rect.width * 0.3) {
+      prevUnit();
+      return;
+    }
+    if (x > rect.width * 0.7) {
+      nextUnit();
+      return;
+    }
+    unlockAudioAndToggle();
   }
 
   // ---- Render stages ----
@@ -300,7 +325,7 @@ export default function Reader() {
       {/* Reading stage */}
       <main
         className="flex-1 flex items-center justify-center px-6 cursor-pointer"
-        onClick={unlockAudioAndToggle}
+        onClick={handleReaderTap}
       >
         <div className="w-full flex flex-col items-center gap-5" style={{ maxWidth: `${prefs.width}px` }}>
           {/* Previous (dim) */}
@@ -375,14 +400,11 @@ export default function Reader() {
       {/* Bottom bar: tension + play */}
       <footer className="px-4 pb-6 pt-3 z-10">
         <div className="max-w-3xl mx-auto">
-          <TensionRibbon
-            chapter={chapter}
-            currentSceneIdx={block?.sceneIdx ?? 0}
-            blockProgress={blocks.length ? (blockIdx + blockProgress) / blocks.length : 0}
-            onJumpScene={(sceneIdx) => {
-              const firstBlock = blocks.findIndex(b => b.sceneIdx === sceneIdx);
-              if (firstBlock >= 0) setBlockIdx(firstBlock);
-            }}
+          <TensionBar
+            scores={blocks.map(item => chapter.scenes[item.sceneIdx]?.score ?? 5)}
+            currentIdx={blockIdx}
+            peaks={chapter.scenes.flatMap((scene, sceneIdx) => scene.score >= 8 ? [blocks.findIndex(item => item.sceneIdx === sceneIdx)] : []).filter(i => i >= 0)}
+            onScrub={(idx) => { setBlockIdx(idx); setPaused(true); }}
           />
           <div className="flex items-center justify-between mt-4">
             <div className="text-[10px] tabular-nums" style={{ color: "hsl(var(--reading-dim))" }}>

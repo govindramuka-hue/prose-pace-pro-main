@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Users, Settings2, X, Check, Volume2, VolumeX } from "lucide-react";
 import type { Book, Chapter } from "@/data/book";
@@ -53,7 +53,7 @@ export function ReaderSidebar({ open, onClose, book, currentChapterIdx, onJumpCh
             <div className="flex-1 overflow-y-auto">
               {tab === "chapters" && <ChapterList chapters={book.chapters} currentIdx={currentChapterIdx} onJump={(i) => { onJumpChapter(i); onClose(); }} />}
               {tab === "characters" && <CharacterList characters={book.characters} />}
-              {tab === "settings" && <SettingsPanel prefs={prefs} setPrefs={setPrefs} />}
+              {tab === "settings" && <SettingsPanel prefs={prefs} setPrefs={setPrefs} onApplied={onClose} />}
             </div>
           </motion.aside>
         </>
@@ -130,7 +130,11 @@ function CharacterList({ characters }: { characters: { name: string; role: strin
   );
 }
 
-export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }) {
+export function SettingsPanel({ prefs, setPrefs, onApplied }: { prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void; onApplied?: () => void }) {
+  const [draft, setDraft] = useState(prefs);
+  useEffect(() => setDraft(prefs), [prefs]);
+  const updateDraft = (p: Partial<Prefs>) => setDraft(prev => ({ ...prev, ...p }));
+
   return (
     <div className="p-5 space-y-7">
       <Section label="Theme">
@@ -138,8 +142,8 @@ export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p:
           {THEME_OPTIONS.map(t => (
             <button
               key={t.id}
-              onClick={() => setPrefs({ theme: t.id })}
-              className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${prefs.theme === t.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/40"}`}
+              onClick={() => updateDraft({ theme: t.id })}
+              className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${draft.theme === t.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/40"}`}
             >
               <div className="w-8 h-8 rounded-full border border-border" style={{ background: t.swatch }} />
               <span className="text-[10px] tracking-wide">{t.label}</span>
@@ -148,41 +152,41 @@ export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p:
         </div>
       </Section>
 
-      <Section label={`Speed - ${prefs.wpm} WPM`}>
-        <input type="range" min={150} max={700} step={10} value={prefs.wpm} onChange={e => setPrefs({ wpm: +e.target.value })} className="w-full accent-primary" />
+      <Section label={`Speed - ${draft.wpm} WPM`}>
+        <input type="range" min={150} max={700} step={10} value={draft.wpm} onChange={e => updateDraft({ wpm: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
       <Section label="Reading mode">
-        <ReadingModeControl prefs={prefs} setPrefs={setPrefs} />
+        <ReadingModeControl prefs={draft} setPrefs={updateDraft} />
       </Section>
 
       <Section label="Smooth highlight">
-        <Toggle checked={prefs.highlight} onChange={v => setPrefs({ highlight: v })} />
+        <Toggle checked={draft.highlight} onChange={v => updateDraft({ highlight: v })} />
       </Section>
 
-      {prefs.readingMode === "spotlight" && (
+      {draft.readingMode === "spotlight" && (
         <>
           <Section label="Show surrounding lines">
-            <Toggle checked={prefs.showContext} onChange={v => setPrefs({ showContext: v })} />
+            <Toggle checked={draft.showContext} onChange={v => updateDraft({ showContext: v })} />
           </Section>
-          {prefs.showContext && (
-            <Section label={`Surrounding line opacity - ${Math.round(prefs.contextOpacity * 100)}%`}>
-              <input type="range" min={0.1} max={1} step={0.05} value={prefs.contextOpacity} onChange={e => setPrefs({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
+          {draft.showContext && (
+            <Section label={`Surrounding line opacity - ${Math.round(draft.contextOpacity * 100)}%`}>
+              <input type="range" min={0.1} max={1} step={0.05} value={draft.contextOpacity} onChange={e => updateDraft({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
             </Section>
           )}
         </>
       )}
 
       <Section label="Font">
-        <FontPicker value={prefs.font} onChange={(font) => setPrefs({ font })} />
+        <FontPicker value={draft.font} onChange={(font) => updateDraft({ font })} />
       </Section>
 
-      <Section label={`Text size - ${prefs.fontSize}px`}>
-        <input type="range" min={20} max={48} step={1} value={prefs.fontSize} onChange={e => setPrefs({ fontSize: +e.target.value })} className="w-full accent-primary" />
+      <Section label={`Text size - ${draft.fontSize}px`}>
+        <input type="range" min={20} max={48} step={1} value={draft.fontSize} onChange={e => updateDraft({ fontSize: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
-      <Section label={`Line height - ${prefs.lineHeight.toFixed(2)}`}>
-        <input type="range" min={1.1} max={1.8} step={0.05} value={prefs.lineHeight} onChange={e => setPrefs({ lineHeight: +e.target.value })} className="w-full accent-primary" />
+      <Section label={`Line height - ${draft.lineHeight.toFixed(2)}`}>
+        <input type="range" min={1.1} max={1.8} step={0.05} value={draft.lineHeight} onChange={e => updateDraft({ lineHeight: +e.target.value })} className="w-full accent-primary" />
       </Section>
 
       <Section label="Ambience">
@@ -190,18 +194,30 @@ export function SettingsPanel({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p:
           {AMBIENT_OPTIONS.map(a => (
             <button
               key={a.id}
-              onClick={() => setPrefs({ ambient: a.id })}
-              className={`py-2 text-[11px] rounded-md border transition-colors ${prefs.ambient === a.id ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-secondary-foreground border-border hover:bg-muted"}`}
+              onClick={() => updateDraft({ ambient: a.id })}
+              className={`py-2 text-[11px] rounded-md border transition-colors ${draft.ambient === a.id ? "bg-primary text-primary-foreground border-primary" : "bg-secondary text-secondary-foreground border-border hover:bg-muted"}`}
             >
               {a.label}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
-          {prefs.ambientVolume === 0 ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4 text-muted-foreground" />}
-          <input type="range" min={0} max={1} step={0.05} value={prefs.ambientVolume} onChange={e => setPrefs({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
+          {draft.ambientVolume === 0 ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4 text-muted-foreground" />}
+          <input type="range" min={0} max={1} step={0.05} value={draft.ambientVolume} onChange={e => updateDraft({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
         </div>
       </Section>
+      <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-card/95 p-4 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => {
+            setPrefs(draft);
+            onApplied?.();
+          }}
+          className="h-11 w-full rounded-full bg-primary text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Apply settings
+        </button>
+      </div>
     </div>
   );
 }

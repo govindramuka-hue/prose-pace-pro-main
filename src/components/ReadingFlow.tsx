@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { Block } from "@/lib/smart-chunker";
+import { MathText } from "@/components/MathText";
 
 interface Props {
   blocks: Block[];
@@ -13,10 +14,6 @@ interface Props {
 
 export function ReadingFlow({ blocks, blockKey, highlightProgress = 0, highlight = true, fontSize, lineHeight, onWordTap }: Props) {
   const fullText = blocks.map(formatBlock).join(" ");
-  const words = fullText.split(/(\s+)/);
-  const wordCount = words.filter(tok => /\S/.test(tok)).length;
-  const litCount = highlight ? Math.round(highlightProgress * wordCount) : -1;
-  let wordOrder = -1;
 
   return (
     <motion.div
@@ -35,27 +32,7 @@ export function ReadingFlow({ blocks, blockKey, highlightProgress = 0, highlight
           color: "hsl(var(--reading-text))",
         }}
       >
-        {words.map((tok, i) => {
-          if (!/\S/.test(tok)) return tok;
-          wordOrder += 1;
-          const lit = highlight && wordOrder < litCount;
-          return (
-            <span
-              key={i}
-              onClick={(e) => {
-                e.stopPropagation();
-                onWordTap?.(tok.replace(/[^\p{L}'-]/gu, ""));
-              }}
-              style={{
-                color: lit ? "hsl(var(--reading-highlight))" : undefined,
-                transition: "color 220ms ease",
-                cursor: onWordTap ? "pointer" : "default",
-              }}
-            >
-              {tok}
-            </span>
-          );
-        })}
+        <MathText text={fullText} highlight={highlight} highlightProgress={highlightProgress} onWordTap={onWordTap} />
       </p>
     </motion.div>
   );

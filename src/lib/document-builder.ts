@@ -1,7 +1,7 @@
 // Convert an IngestResult into a complete DocRecord (segment, score, save).
 import type { DocRecord, DocPage } from "./db";
 import { saveDoc } from "./db";
-import { segmentSentences } from "./sentence-segmenter";
+import { segmentSentences, splitIntoBreathUnits } from "./sentence-segmenter";
 import { scoreSentences } from "./tension";
 import type { IngestResult } from "./ingestion";
 
@@ -13,10 +13,11 @@ export async function buildAndSaveDoc(
   const sectionTitles = detectSectionTitles(rawSentences);
   const sectionSourceIdx = new Set(sectionTitles.map(item => item.sentenceIdx));
   const indexMap = new Map<number, number>();
-  const sentences = rawSentences.filter((sentence, rawIdx) => {
-    if (sectionSourceIdx.has(rawIdx)) return false;
-    indexMap.set(rawIdx, indexMap.size);
-    return true;
+  const sentences: string[] = [];
+  rawSentences.forEach((sentence, rawIdx) => {
+    if (sectionSourceIdx.has(rawIdx)) return;
+    indexMap.set(rawIdx, sentences.length);
+    splitIntoBreathUnits(sentence, 18).forEach(unit => sentences.push(unit.text));
   });
   const mappedSectionTitles = sectionTitles
     .map(section => {
@@ -78,14 +79,18 @@ function detectSectionTitles(sentences: string[]) {
 
 function isSectionHeading(title: string) {
   const words = title.split(/\s+/).filter(Boolean);
+  const titleCaseWords = words.filter(word => /^[A-Z][A-Za-z0-9:()/-]*$/.test(word)).length;
+  const numbered = /^(\d+(\.\d+)*|[IVXLC]+)\s+[\w(]/.test(title);
   return (
     title.length >= 3 &&
     title.length <= 90 &&
-    words.length <= 10 &&
+    words.length <= 12 &&
     !/[.!?]$/.test(title) &&
     (
       /^(chapter|part|section|abstract|introduction|conclusion|references|appendix|preface|prologue|epilogue|contents|summary|method|methods|results|discussion)\b/i.test(title) ||
-      title === title.toUpperCase()
+      title === title.toUpperCase() ||
+      numbered ||
+      (words.length <= 8 && titleCaseWords / Math.max(1, words.length) >= 0.65)
     )
   );
 }

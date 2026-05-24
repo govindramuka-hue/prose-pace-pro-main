@@ -88,6 +88,15 @@ export async function deleteDoc(id: string) {
   await db.delete("progress", id);
 }
 
+export async function updateDocMeta(id: string, patch: Pick<Partial<DocRecord>, "title" | "folder">) {
+  const db = await getDB();
+  const doc = await db.get("documents", id);
+  if (!doc) return undefined;
+  const next = { ...doc, ...patch, updatedAt: Date.now() };
+  await db.put("documents", next);
+  return next;
+}
+
 export async function saveProgress(p: ProgressRecord) {
   const db = await getDB();
   await db.put("progress", p);

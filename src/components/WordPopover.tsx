@@ -15,10 +15,10 @@ interface Props {
 export function WordPopover({ word, loading, result, saved = false, onSave, onClose }: Props) {
   return (
     <Dialog open={!!word} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-sm bg-card border-border">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm max-h-[82dvh] overflow-y-auto bg-card border-border p-5">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl flex items-baseline gap-2 pr-8">
-            <span className="flex items-baseline gap-2">
+          <DialogTitle className="font-display text-2xl flex items-baseline gap-2 pr-8 break-words">
+            <span className="flex flex-wrap items-baseline gap-2 min-w-0">
               {word}
               {result?.partOfSpeech && <span className="text-xs font-normal italic text-muted-foreground">{result.partOfSpeech}</span>}
             </span>
@@ -30,7 +30,7 @@ export function WordPopover({ word, loading, result, saved = false, onSave, onCl
           </div>
         ) : result ? (
           <div className="space-y-4">
-            <p className="text-sm leading-relaxed">{result.definition}</p>
+            <p className="text-sm leading-relaxed break-words">{result.definition}</p>
             {result.synonyms.length > 0 && (
               <div>
                 <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-2">Synonyms</div>

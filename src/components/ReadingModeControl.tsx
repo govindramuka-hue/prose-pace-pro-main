@@ -1,4 +1,4 @@
-import { Rows3, ScanLine } from "lucide-react";
+import { Gauge, Hand, Rows3, ScanLine } from "lucide-react";
 import type { Prefs, ReadingMode } from "@/lib/reader-prefs";
 
 interface Props {
@@ -9,6 +9,22 @@ interface Props {
 export function ReadingModeControl({ prefs, setPrefs }: Props) {
   return (
     <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <ModeButton
+          active={prefs.pacingMode === "auto"}
+          icon={<Gauge className="h-4 w-4" />}
+          title="Auto pace"
+          detail="Timed by WPM"
+          onClick={() => setPrefs({ pacingMode: "auto" })}
+        />
+        <ModeButton
+          active={prefs.pacingMode === "manual"}
+          icon={<Hand className="h-4 w-4" />}
+          title="Hand pace"
+          detail="Tap to move"
+          onClick={() => setPrefs({ pacingMode: "manual" })}
+        />
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <ModeButton
           active={prefs.readingMode === "spotlight"}

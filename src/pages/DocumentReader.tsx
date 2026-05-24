@@ -14,6 +14,7 @@ import { RecapCard } from "@/components/RecapCard";
 import { TensionBar } from "@/components/TensionBar";
 import { SettingsPanel } from "@/components/ReaderSidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useFlowCount } from "@/hooks/use-flow-count";
 
 export default function DocumentReader() {
   const navigate = useNavigate();
@@ -62,7 +63,8 @@ export default function DocumentReader() {
   }, [doc]);
 
   const block = blocks[sentenceIdx];
-  const flowCount = prefs.readingMode === "flow" ? Math.max(1, prefs.flowLines) : 1;
+  const effectiveFlowLines = useFlowCount(prefs.flowLines);
+  const flowCount = prefs.readingMode === "flow" ? Math.max(1, effectiveFlowLines) : 1;
   const visibleBlocks = useMemo(
     () => blocks.slice(sentenceIdx, Math.min(blocks.length, sentenceIdx + flowCount)),
     [blocks, sentenceIdx, flowCount]
@@ -89,7 +91,7 @@ export default function DocumentReader() {
   }, [sentenceIdx, prefs.readingMode, prefs.flowLines]);
 
   useEffect(() => {
-    if (paused || stage !== "reading") {
+    if (paused || stage !== "reading" || prefs.pacingMode === "manual") {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
@@ -107,7 +109,18 @@ export default function DocumentReader() {
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [paused, stage, blockMs, blocks.length, flowCount]);
+  }, [paused, stage, blockMs, blocks.length, flowCount, prefs.pacingMode]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "Space") { e.preventDefault(); setPaused(p => !p); }
+      if (e.code === "ArrowRight") nextUnit();
+      if (e.code === "ArrowLeft") prevUnit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [flowCount, blocks.length]);
 
   function handleWordTap(word: string) {
     const clean = word.toLowerCase().replace(/[^a-z'-]/g, "");
@@ -124,6 +137,28 @@ export default function DocumentReader() {
         setLookupSaved(isWordSaved(res.word));
       }
     });
+  }
+
+  function nextUnit() {
+    setSentenceIdx(i => Math.min(blocks.length - 1, i + flowCount));
+  }
+
+  function prevUnit() {
+    setSentenceIdx(i => Math.max(0, i - flowCount));
+  }
+
+  function handleReaderTap(e: React.MouseEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x < rect.width * 0.3) {
+      prevUnit();
+      return;
+    }
+    if (x > rect.width * 0.7) {
+      nextUnit();
+      return;
+    }
+    setPaused(p => !p);
   }
 
   if (loading) {
@@ -181,7 +216,7 @@ export default function DocumentReader() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 cursor-pointer" onClick={() => setPaused(p => !p)}>
+      <main className="flex-1 flex items-center justify-center px-6 cursor-pointer" onClick={handleReaderTap}>
         <div className="w-full flex flex-col items-center gap-5" style={{ maxWidth: `${prefs.width}px` }}>
           <div className="h-6 w-full text-center">
             <AnimatePresence mode="wait">
@@ -262,7 +297,7 @@ export default function DocumentReader() {
           <DialogHeader className="px-5 pt-5 pb-3 border-b border-border">
             <DialogTitle className="font-display text-xl">{doc.title}</DialogTitle>
           </DialogHeader>
-          <SettingsPanel prefs={prefs} setPrefs={setPrefs} />
+          <SettingsPanel prefs={prefs} setPrefs={setPrefs} onApplied={() => setSettingsOpen(false)} />
         </DialogContent>
       </Dialog>
 

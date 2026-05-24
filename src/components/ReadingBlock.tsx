@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import type { Block } from "@/lib/smart-chunker";
+import { MathText } from "@/components/MathText";
 
 interface Props {
   block: Block;
@@ -40,10 +41,6 @@ export function ReadingBlock({ block, blockKey, progress, highlight, fontSize, l
     return block.text;
   }, [block.text, isDialogue]);
 
-  const tokens = useMemo(() => display.split(/(\s+)/), [display]);
-  const wordIndices = useMemo(() => tokens.map((t, i) => (/\S/.test(t) ? i : -1)).filter(i => i >= 0), [tokens]);
-  const litCount = highlight ? Math.round(progress * wordIndices.length) : -1;
-
   return (
     <motion.div
       key={blockKey}
@@ -71,27 +68,7 @@ export function ReadingBlock({ block, blockKey, progress, highlight, fontSize, l
           letterSpacing: isQuote ? "0.01em" : "0",
         }}
       >
-        {tokens.map((tok, i) => {
-          if (!/\S/.test(tok)) return tok;
-          const wordOrder = wordIndices.indexOf(i);
-          const lit = highlight && wordOrder < litCount;
-          return (
-            <span
-              key={i}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onWordTap) onWordTap(tok.replace(/[^\p{L}'-]/gu, ""));
-              }}
-              style={{
-                color: lit ? "hsl(var(--reading-highlight))" : undefined,
-                transition: "color 220ms ease",
-                cursor: onWordTap ? "pointer" : "default",
-              }}
-            >
-              {tok}
-            </span>
-          );
-        })}
+        <MathText text={display} highlight={highlight} highlightProgress={progress} onWordTap={onWordTap} />
       </p>
     </motion.div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Type } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FONT_OPTIONS, FONT_STACKS, type FontFamily } from "@/lib/reader-prefs";
@@ -12,7 +12,13 @@ const PREVIEW_LINE = "The page changes its voice without losing the story.";
 
 export function FontPicker({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
   const current = FONT_OPTIONS.find(font => font.id === value) ?? FONT_OPTIONS[0];
+  const preview = FONT_OPTIONS.find(font => font.id === draft) ?? current;
+
+  useEffect(() => {
+    if (open) setDraft(value);
+  }, [open, value]);
 
   return (
     <>
@@ -44,8 +50,8 @@ export function FontPicker({ value, onChange }: Props) {
               Preview
             </div>
             <p
-              className="reading-copy text-2xl md:text-3xl leading-snug text-balance"
-              style={{ color: "hsl(var(--reading-text))" }}
+              className="text-2xl md:text-3xl leading-snug text-balance"
+              style={{ color: "hsl(var(--reading-text))", fontFamily: FONT_STACKS[preview.id] }}
             >
               {PREVIEW_LINE}
             </p>
@@ -53,15 +59,12 @@ export function FontPicker({ value, onChange }: Props) {
           <div className="max-h-[52vh] overflow-y-auto scrollbar-hide p-4">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {FONT_OPTIONS.map(font => {
-                const selected = value === font.id;
+                const selected = draft === font.id;
                 return (
                   <button
                     key={font.id}
                     type="button"
-                    onClick={() => {
-                      onChange(font.id);
-                      setOpen(false);
-                    }}
+                    onClick={() => setDraft(font.id)}
                     className={`min-h-20 rounded-xl border px-4 py-3 text-left transition-all ${
                       selected
                         ? "border-primary bg-primary/10 ring-2 ring-primary/20"
@@ -86,6 +89,21 @@ export function FontPicker({ value, onChange }: Props) {
                 );
               })}
             </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+            <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-full border border-border px-4 text-sm hover:bg-muted">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onChange(draft);
+                setOpen(false);
+              }}
+              className="h-10 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              Apply font
+            </button>
           </div>
         </DialogContent>
       </Dialog>

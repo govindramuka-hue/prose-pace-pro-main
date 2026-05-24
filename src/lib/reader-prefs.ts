@@ -12,6 +12,7 @@ export type Ambient =
   | "silence" | "rain" | "fireplace" | "forest"
   | "ocean" | "cafe" | "lofi" | "noise";
 export type ReadingMode = "spotlight" | "flow";
+export type PacingMode = "auto" | "manual";
 
 export interface Prefs {
   theme: Theme;
@@ -27,6 +28,7 @@ export interface Prefs {
   contextOpacity: number;   // 0..1 opacity for those previews
   readingMode: ReadingMode;
   flowLines: number;
+  pacingMode: PacingMode;
 }
 
 const KEY = "pt:prefs:v3";
@@ -45,6 +47,7 @@ const DEFAULTS: Prefs = {
   contextOpacity: 0.55,
   readingMode: "spotlight",
   flowLines: 6,
+  pacingMode: "auto",
 };
 
 function load(): Prefs {
