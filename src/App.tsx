@@ -8,6 +8,7 @@ import Index from "./pages/Index.tsx";
 import Reader from "./pages/Reader.tsx";
 import DocumentReader from "./pages/DocumentReader.tsx";
 import Dictionary from "./pages/Dictionary.tsx";
+import EarlyAccess from "./pages/EarlyAccess.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/early-access" element={<EarlyAccess />} />
           <Route path="/dictionary" element={<Dictionary />} />
           <Route path="/read" element={<Reader />} />
           <Route path="/read/:id" element={<Reader />} />

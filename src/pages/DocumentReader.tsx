@@ -195,7 +195,7 @@ export default function DocumentReader() {
   return (
     <div className="min-h-screen reading-surface flex flex-col">
       <header className="flex items-center justify-between px-4 py-3 z-10">
-        <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-lg hover:bg-muted/40 transition-colors" aria-label="Open menu">
+        <button onClick={() => { setPaused(true); setSettingsOpen(true); }} className="p-2 rounded-lg hover:bg-muted/40 transition-colors" aria-label="Open menu">
           <Menu className="h-5 w-5" />
         </button>
         <div className="text-center min-w-0">

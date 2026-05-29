@@ -290,7 +290,10 @@ export default function Reader() {
       {/* Top bar */}
       <header className="flex items-center justify-between px-4 py-3 z-10">
         <button
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => {
+            setPaused(true);
+            setSidebarOpen(true);
+          }}
           className="p-2 rounded-lg hover:bg-muted/40 transition-colors"
           aria-label="Open menu"
         >

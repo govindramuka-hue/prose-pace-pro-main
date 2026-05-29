@@ -131,6 +131,9 @@ export default function Index() {
               </div>
             </div>
           )}
+          <Button onClick={() => navigate("/early-access")} className="hidden sm:inline-flex h-10 rounded-full px-4">
+            Join waitlist
+          </Button>
           <IconButton label="Dictionary" onClick={() => navigate("/dictionary")} icon={<BookMarked className="h-4 w-4" />} />
           <IconButton label="Add document" onClick={() => setUploadOpen(true)} icon={<Upload className="h-4 w-4" />} />
           <IconButton label="Reading speed" onClick={() => setSpeedOpen(true)} icon={<Gauge className="h-4 w-4" />} />
@@ -192,6 +195,30 @@ export default function Index() {
       )}
 
       <section className="w-full box-border px-6 pb-14 max-w-5xl mx-auto">
+        <button
+          onClick={() => navigate("/early-access")}
+          className="group w-full rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card to-card p-6 text-left transition-all hover:border-primary/60 md:p-8"
+          style={{ boxShadow: "var(--shadow-glow)" }}
+        >
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <div className="text-sm text-primary mb-3">The native app is being shaped now</div>
+              <h2 className="font-display text-3xl md:text-4xl leading-tight text-balance">
+                Join the waitlist for the full Lumen mobile app.
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Help decide what comes first: a larger prepared library, AI-prepared uploads, dynamic recaps, analytics, and a reading account that keeps progress across devices.
+              </p>
+            </div>
+            <div className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-all group-hover:gap-3">
+              Join waitlist
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </div>
+          </div>
+        </button>
+      </section>
+
+      <section className="w-full box-border px-6 pb-14 max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-4 mb-5">
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-1">My library</div>
@@ -212,7 +239,7 @@ export default function Index() {
               <div>
                 <div className="font-display text-2xl mb-2">Bring your own reading</div>
                 <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                  Upload PDFs, EPUBs, Word docs, text files, web exports, or scanned pages and read them with Lumen's pacing, dictionary, recaps, and tension map.
+                  Upload PDFs or EPUBs and read them with Lumen's pacing, dictionary, recaps, and tension map.
                 </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center flex-shrink-0">
@@ -632,7 +659,7 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
               <SettingGroup label={`Line height ${draft.lineHeight.toFixed(2)}`}>
                 <input type="range" min={1.1} max={1.8} step={0.05} value={draft.lineHeight} onChange={e => updateDraft({ lineHeight: +e.target.value })} className="w-full accent-primary" />
               </SettingGroup>
-              <SettingGroup label="Font">
+              <SettingGroup label="Font" className="sm:col-span-2">
                 <FontPicker value={draft.font} onChange={(font) => updateDraft({ font })} />
               </SettingGroup>
             </div>
@@ -841,9 +868,9 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
   );
 }
 
-function SettingGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function SettingGroup({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={className}>
       <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-3">{label}</div>
       {children}
     </div>
