@@ -650,7 +650,7 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
                 <input type="range" min={0} max={1} step={0.05} value={draft.ambientVolume} onChange={e => updateDraft({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
               </div>
             </SettingGroup>
-            <div className="sticky bottom-0 -mx-6 -mb-6 border-t border-border bg-card/95 p-4 backdrop-blur">
+            <div className="border-t border-border pt-4">
               <Button
                 className="h-11 w-full rounded-full"
                 onClick={() => {

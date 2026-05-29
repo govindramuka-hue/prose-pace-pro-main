@@ -206,7 +206,7 @@ export function SettingsPanel({ prefs, setPrefs, onApplied }: { prefs: Prefs; se
           <input type="range" min={0} max={1} step={0.05} value={draft.ambientVolume} onChange={e => updateDraft({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
         </div>
       </Section>
-      <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-card/95 p-4 backdrop-blur">
+      <div className="border-t border-border pt-4">
         <button
           type="button"
           onClick={() => {

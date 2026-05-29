@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Check, Type } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FONT_OPTIONS, FONT_STACKS, type FontFamily } from "@/lib/reader-prefs";
 
 interface Props {
@@ -17,14 +16,14 @@ export function FontPicker({ value, onChange }: Props) {
   const preview = FONT_OPTIONS.find(font => font.id === draft) ?? current;
 
   useEffect(() => {
-    if (open) setDraft(value);
+    if (!open) setDraft(value);
   }, [open, value]);
 
   return (
-    <>
+    <div className="space-y-3">
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(o => !o)}
         className="w-full min-h-16 rounded-xl border border-border bg-secondary/70 px-4 py-3 text-left hover:border-primary/50 transition-colors"
       >
         <div className="flex items-center justify-between gap-4">
@@ -40,24 +39,22 @@ export function FontPicker({ value, onChange }: Props) {
         </div>
       </button>
 
-      <Dialog modal={false} open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[88vh] overflow-hidden bg-card border-border p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <DialogTitle className="font-display text-2xl">Choose reading font</DialogTitle>
-          </DialogHeader>
-          <div className="reading-surface px-6 py-7 border-b border-border">
-            <div className="text-[10px] uppercase tracking-[0.28em] mb-4" style={{ color: "hsl(var(--reading-dim))" }}>
+      {open && (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="reading-surface px-4 py-5 border-b border-border">
+            <div className="text-[10px] uppercase tracking-[0.24em] mb-3" style={{ color: "hsl(var(--reading-dim))" }}>
               Preview
             </div>
             <p
-              className="text-2xl md:text-3xl leading-snug text-balance"
+              className="text-xl md:text-2xl leading-snug text-balance"
               style={{ color: "hsl(var(--reading-text))", fontFamily: FONT_STACKS[preview.id] }}
             >
               {PREVIEW_LINE}
             </p>
           </div>
-          <div className="max-h-[52vh] overflow-y-auto p-4">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+
+          <div className="max-h-[46vh] overflow-y-auto p-3">
+            <div className="grid gap-2 sm:grid-cols-2">
               {FONT_OPTIONS.map(font => {
                 const selected = draft === font.id;
                 return (
@@ -76,10 +73,7 @@ export function FontPicker({ value, onChange }: Props) {
                         <div className="truncate text-lg leading-tight" style={{ fontFamily: FONT_STACKS[font.id] }}>
                           {font.label}
                         </div>
-                        <div
-                          className="mt-2 truncate text-sm text-muted-foreground"
-                          style={{ fontFamily: FONT_STACKS[font.id] }}
-                        >
+                        <div className="mt-2 truncate text-sm text-muted-foreground" style={{ fontFamily: FONT_STACKS[font.id] }}>
                           {sampleFor(font.id)}
                         </div>
                       </div>
@@ -90,8 +84,9 @@ export function FontPicker({ value, onChange }: Props) {
               })}
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
-            <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-full border border-border px-4 text-sm hover:bg-muted">
+
+          <div className="flex items-center justify-end gap-2 border-t border-border px-3 py-3">
+            <button type="button" onClick={() => { setDraft(value); setOpen(false); }} className="h-10 rounded-full border border-border px-4 text-sm hover:bg-muted">
               Cancel
             </button>
             <button
@@ -105,9 +100,9 @@ export function FontPicker({ value, onChange }: Props) {
               Apply font
             </button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
 
