@@ -107,7 +107,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="px-6 pt-10 pb-6 max-w-6xl mx-auto flex items-center justify-between">
+      <header className="w-full box-border px-6 pt-10 pb-6 max-w-6xl mx-auto flex items-center justify-between">
         <button onClick={() => navigate("/")} className="flex items-center gap-2.5 text-left">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center" style={{ boxShadow: "var(--shadow-glow)" }}>
             <BookOpen className="w-4 h-4 text-primary-foreground" />
@@ -139,7 +139,7 @@ export default function Index() {
       </header>
 
       {lastBook && lastProgress && lastChapter && !lastProgress.finished ? (
-        <section className="px-6 pt-8 pb-12 max-w-5xl mx-auto">
+        <section className="w-full box-border px-6 pt-8 pb-12 max-w-5xl mx-auto">
           <motion.button
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -173,7 +173,7 @@ export default function Index() {
           </motion.button>
         </section>
       ) : (
-        <section className="px-6 pt-16 pb-20 max-w-5xl mx-auto text-center">
+        <section className="w-full box-border px-6 pt-16 pb-20 max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
@@ -191,7 +191,7 @@ export default function Index() {
         </section>
       )}
 
-      <section className="px-6 pb-14 max-w-5xl mx-auto">
+      <section className="w-full box-border px-6 pb-14 max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-4 mb-5">
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-1">My library</div>
@@ -225,7 +225,7 @@ export default function Index() {
             {docs.map(doc => (
               <div
                 key={doc.id}
-                className="rounded-2xl border border-border bg-card p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all"
+                className="min-w-0 rounded-2xl border border-border bg-card p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -266,7 +266,7 @@ export default function Index() {
         )}
       </section>
 
-      <section className="px-6 pb-24 max-w-5xl mx-auto">
+      <section className="w-full box-border px-6 pb-24 max-w-5xl mx-auto">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
           <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">In the library</div>
           <div className="relative w-full md:w-80">
@@ -294,7 +294,7 @@ export default function Index() {
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 + i * 0.1 }}
                 onClick={() => navigate(`/read/${b.id}`)}
-                className="group w-full text-left rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all hover:-translate-y-0.5 flex flex-col"
+                className="group min-w-0 w-full text-left rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all hover:-translate-y-0.5 flex flex-col"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
                 <div
@@ -515,6 +515,12 @@ function coverTreatment(_theme: { from: string; via: string; to: string }, activ
 }
 
 function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boolean; onOpenChange: (open: boolean) => void; prefs: ReturnType<typeof usePrefs>[0]; setPrefs: ReturnType<typeof usePrefs>[1] }) {
+  const [draft, setDraft] = useState(prefs);
+  useEffect(() => {
+    if (open) setDraft(prefs);
+  }, [open, prefs]);
+  const updateDraft = (p: Partial<typeof prefs>) => setDraft(prev => ({ ...prev, ...p }));
+
   const previewBlock: Block = {
     text: "The sentence slows, brightens, and waits for you to meet it.",
     type: "narrative",
@@ -528,57 +534,57 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto bg-card border-border p-0">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[88dvh] overflow-y-auto overflow-x-hidden bg-card border-border p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="font-display text-2xl">Reading room</DialogTitle>
         </DialogHeader>
         <div className="grid gap-0 md:grid-cols-[1fr_1.1fr]">
           <div className="reading-surface px-6 py-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-border">
-            <div className="w-full text-center flex flex-col items-center gap-5" style={{ maxWidth: `${Math.min(420, prefs.width)}px` }}>
+            <div className="w-full text-center flex flex-col items-center gap-5" style={{ maxWidth: `${Math.min(420, draft.width)}px` }}>
               <div className="text-[10px] uppercase tracking-[0.3em] mb-5" style={{ color: "hsl(var(--reading-dim))" }}>Preview</div>
               <div className="h-6 w-full text-center">
-                {prefs.readingMode === "spotlight" && prefs.showContext && (
+                {draft.readingMode === "spotlight" && draft.showContext && (
                   <p
                     className="reading-copy text-xs leading-snug truncate px-4"
-                    style={{ color: "hsl(var(--reading-dim))", opacity: prefs.contextOpacity }}
+                    style={{ color: "hsl(var(--reading-dim))", opacity: draft.contextOpacity }}
                   >
                     Before it, the page grows quiet.
                   </p>
                 )}
               </div>
-              {prefs.readingMode === "flow" ? (
+              {draft.readingMode === "flow" ? (
                 <ReadingFlow
-                  blocks={flowPreview.slice(0, Math.min(flowPreview.length, prefs.flowLines))}
-                  blockKey={`${prefs.font}-${prefs.fontSize}-${prefs.lineHeight}-${prefs.highlight}-${prefs.flowLines}`}
-                  highlightProgress={prefs.highlight ? 0.58 : 0}
-                  highlight={prefs.highlight}
-                  fontSize={Math.min(40, prefs.fontSize)}
-                  lineHeight={prefs.lineHeight}
+                  blocks={flowPreview.slice(0, Math.min(flowPreview.length, draft.flowLines))}
+                  blockKey={`${draft.font}-${draft.fontSize}-${draft.lineHeight}-${draft.highlight}-${draft.flowLines}`}
+                  highlightProgress={draft.highlight ? 0.58 : 0}
+                  highlight={draft.highlight}
+                  fontSize={Math.min(40, draft.fontSize)}
+                  lineHeight={draft.lineHeight}
                 />
               ) : (
                 <ReadingBlock
                   block={previewBlock}
-                  blockKey={`${prefs.font}-${prefs.fontSize}-${prefs.lineHeight}-${prefs.highlight}`}
-                  progress={prefs.highlight ? 0.58 : 0}
-                  highlight={prefs.highlight}
-                  fontSize={Math.min(40, prefs.fontSize)}
-                  lineHeight={prefs.lineHeight}
+                  blockKey={`${draft.font}-${draft.fontSize}-${draft.lineHeight}-${draft.highlight}`}
+                  progress={draft.highlight ? 0.58 : 0}
+                  highlight={draft.highlight}
+                  fontSize={Math.min(40, draft.fontSize)}
+                  lineHeight={draft.lineHeight}
                 />
               )}
               <div className="h-6 w-full text-center">
-                {prefs.readingMode === "spotlight" && prefs.showContext && (
+                {draft.readingMode === "spotlight" && draft.showContext && (
                   <p
                     className="reading-copy text-xs leading-snug truncate px-4"
-                    style={{ color: "hsl(var(--reading-dim))", opacity: prefs.contextOpacity }}
+                    style={{ color: "hsl(var(--reading-dim))", opacity: draft.contextOpacity }}
                   >
                     After it, the next line begins to glow.
                   </p>
                 )}
               </div>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em]" style={{ color: "hsl(var(--reading-dim))" }}>
-                <span>{prefs.ambient === "silence" ? "silent" : AMBIENT_OPTIONS.find(a => a.id === prefs.ambient)?.label}</span>
+                <span>{draft.ambient === "silence" ? "silent" : AMBIENT_OPTIONS.find(a => a.id === draft.ambient)?.label}</span>
                 <span>·</span>
-                <span>{Math.round(prefs.ambientVolume * 100)}%</span>
+                <span>{Math.round(draft.ambientVolume * 100)}%</span>
               </div>
             </div>
           </div>
@@ -588,8 +594,8 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
                 {THEME_OPTIONS.map(theme => (
                   <button
                     key={theme.id}
-                    onClick={() => setPrefs({ theme: theme.id as Theme })}
-                    className={`h-14 rounded-xl border flex items-center justify-center transition-all ${prefs.theme === theme.id ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-primary/40"}`}
+                    onClick={() => updateDraft({ theme: theme.id as Theme })}
+                    className={`h-14 rounded-xl border flex items-center justify-center transition-all ${draft.theme === theme.id ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-primary/40"}`}
                     aria-label={theme.label}
                     title={theme.label}
                   >
@@ -599,51 +605,62 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
               </div>
             </SettingGroup>
             <div className="grid gap-5 sm:grid-cols-2">
-              <SettingGroup label={`Speed ${prefs.wpm} WPM`}>
-                <input type="range" min={150} max={700} step={10} value={prefs.wpm} onChange={e => setPrefs({ wpm: +e.target.value })} className="w-full accent-primary" />
+              <SettingGroup label={`Speed ${draft.wpm} WPM`}>
+                <input type="range" min={150} max={700} step={10} value={draft.wpm} onChange={e => updateDraft({ wpm: +e.target.value })} className="w-full accent-primary" />
               </SettingGroup>
-              <SettingGroup label={`Text ${prefs.fontSize}px`}>
-                <input type="range" min={20} max={48} step={1} value={prefs.fontSize} onChange={e => setPrefs({ fontSize: +e.target.value })} className="w-full accent-primary" />
+              <SettingGroup label={`Text ${draft.fontSize}px`}>
+                <input type="range" min={20} max={48} step={1} value={draft.fontSize} onChange={e => updateDraft({ fontSize: +e.target.value })} className="w-full accent-primary" />
               </SettingGroup>
-              <SettingGroup label={`Line height ${prefs.lineHeight.toFixed(2)}`}>
-                <input type="range" min={1.1} max={1.8} step={0.05} value={prefs.lineHeight} onChange={e => setPrefs({ lineHeight: +e.target.value })} className="w-full accent-primary" />
+              <SettingGroup label={`Line height ${draft.lineHeight.toFixed(2)}`}>
+                <input type="range" min={1.1} max={1.8} step={0.05} value={draft.lineHeight} onChange={e => updateDraft({ lineHeight: +e.target.value })} className="w-full accent-primary" />
               </SettingGroup>
               <SettingGroup label="Font">
-                <FontPicker value={prefs.font} onChange={(font) => setPrefs({ font })} />
+                <FontPicker value={draft.font} onChange={(font) => updateDraft({ font })} />
               </SettingGroup>
             </div>
             <SettingGroup label="Reading aids">
               <div className="grid gap-2 sm:grid-cols-2">
-                <ToggleButton active={prefs.highlight} onClick={() => setPrefs({ highlight: !prefs.highlight })} label="Smooth highlight" />
-                {prefs.readingMode === "spotlight" && (
-                  <ToggleButton active={prefs.showContext} onClick={() => setPrefs({ showContext: !prefs.showContext })} label="Surrounding lines" />
+                <ToggleButton active={draft.highlight} onClick={() => updateDraft({ highlight: !draft.highlight })} label="Smooth highlight" />
+                {draft.readingMode === "spotlight" && (
+                  <ToggleButton active={draft.showContext} onClick={() => updateDraft({ showContext: !draft.showContext })} label="Surrounding lines" />
                 )}
               </div>
-              {prefs.readingMode === "spotlight" && prefs.showContext && (
+              {draft.readingMode === "spotlight" && draft.showContext && (
                 <div className="mt-4">
                   <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                    Context opacity {Math.round(prefs.contextOpacity * 100)}%
+                    Context opacity {Math.round(draft.contextOpacity * 100)}%
                   </div>
-                  <input type="range" min={0.1} max={1} step={0.05} value={prefs.contextOpacity} onChange={e => setPrefs({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
+                  <input type="range" min={0.1} max={1} step={0.05} value={draft.contextOpacity} onChange={e => updateDraft({ contextOpacity: +e.target.value })} className="w-full accent-primary" />
                 </div>
               )}
             </SettingGroup>
             <SettingGroup label="Reading mode">
-              <ReadingModeControl prefs={prefs} setPrefs={setPrefs} />
+              <ReadingModeControl prefs={draft} setPrefs={updateDraft} />
             </SettingGroup>
             <SettingGroup label="Ambience">
               <div className="grid grid-cols-4 gap-2">
                 {AMBIENT_OPTIONS.map(ambient => (
-                  <button key={ambient.id} onClick={() => setPrefs({ ambient: ambient.id as Ambient })} className={`h-9 rounded-full border text-[11px] ${prefs.ambient === ambient.id ? "bg-primary text-primary-foreground border-primary" : "border-border bg-secondary text-secondary-foreground"}`}>
+                  <button key={ambient.id} onClick={() => updateDraft({ ambient: ambient.id as Ambient })} className={`h-9 rounded-full border text-[11px] ${draft.ambient === ambient.id ? "bg-primary text-primary-foreground border-primary" : "border-border bg-secondary text-secondary-foreground"}`}>
                     {ambient.label}
                   </button>
                 ))}
               </div>
               <div className="flex items-center gap-2 mt-3">
                 <Volume2 className="h-4 w-4 text-muted-foreground" />
-                <input type="range" min={0} max={1} step={0.05} value={prefs.ambientVolume} onChange={e => setPrefs({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
+                <input type="range" min={0} max={1} step={0.05} value={draft.ambientVolume} onChange={e => updateDraft({ ambientVolume: +e.target.value })} className="flex-1 accent-primary" />
               </div>
             </SettingGroup>
+            <div className="sticky bottom-0 -mx-6 -mb-6 border-t border-border bg-card/95 p-4 backdrop-blur">
+              <Button
+                className="h-11 w-full rounded-full"
+                onClick={() => {
+                  setPrefs(draft);
+                  onOpenChange(false);
+                }}
+              >
+                Apply settings
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -713,12 +730,12 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl max-h-[92dvh] overflow-y-auto bg-card border-border p-0">
-        <div className="reading-surface min-h-[60vh] sm:min-h-[70vh] flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="font-display text-2xl" style={{ color: "hsl(var(--reading-text))" }}>Reading speed check</DialogTitle>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-5xl max-h-[92dvh] overflow-y-auto overflow-x-hidden bg-card border-border p-0">
+        <div className="reading-surface min-h-[60vh] sm:min-h-[70vh] flex flex-col overflow-x-hidden">
+          <DialogHeader className="px-4 sm:px-6 pt-6 pb-4 pr-10">
+            <DialogTitle className="font-display text-xl sm:text-2xl" style={{ color: "hsl(var(--reading-text))" }}>Reading speed check</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
+          <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-5 sm:py-8 min-w-0">
             <div className="w-full max-w-3xl flex flex-col items-center gap-5">
               <div className="h-6 w-full text-center">
                 <AnimatePresence mode="wait">
@@ -744,7 +761,7 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
                   block={block}
                   progress={blockProgress}
                   highlight
-                  fontSize={34}
+                  fontSize={30}
                   lineHeight={1.35}
                 />
               </AnimatePresence>
@@ -767,19 +784,20 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
               </div>
             </div>
           </div>
-          <div className="border-t border-white/10 bg-background/80 backdrop-blur px-6 py-5">
+          <div className="border-t border-white/10 bg-background/80 backdrop-blur px-4 sm:px-6 py-5">
             <div className="max-w-3xl mx-auto space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="min-w-0">
                   <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-1">Pace</div>
-                  <div className="font-display text-3xl tabular-nums">{manualWpm} WPM</div>
+                  <div className="font-display text-2xl sm:text-3xl tabular-nums">{manualWpm} WPM</div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={replay} aria-label="Replay sample">
+                <div className="grid grid-cols-[44px_1fr_1fr] gap-2 sm:flex sm:w-auto">
+                  <Button variant="outline" size="icon" onClick={replay} aria-label="Replay sample" className="shrink-0">
                     <RotateCcw className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
+                    className="min-w-0"
                     onClick={() => {
                       if (blockProgress >= 1 && blockIdx === SPEED_BLOCKS.length - 1) replay();
                       else setPlaying(p => !p);
@@ -788,7 +806,7 @@ function SpeedCheckDialog({ open, onOpenChange, currentWpm, onApply }: { open: b
                     {playing ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
                     {playing ? "Pause" : "Play"}
                   </Button>
-                  <Button onClick={() => { onApply(manualWpm); onOpenChange(false); }}>Use pace</Button>
+                  <Button className="min-w-0" onClick={() => { onApply(manualWpm); onOpenChange(false); }}>Use pace</Button>
                 </div>
               </div>
               <input type="range" min={120} max={700} step={5} value={manualWpm} onChange={e => setManualWpm(+e.target.value)} className="w-full accent-primary" />
