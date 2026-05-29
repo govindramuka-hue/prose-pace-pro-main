@@ -56,7 +56,7 @@ export function FontPicker({ value, onChange }: Props) {
               {PREVIEW_LINE}
             </p>
           </div>
-          <div className="max-h-[52vh] overflow-y-auto scrollbar-hide p-4">
+          <div className="max-h-[52vh] overflow-y-auto p-4">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {FONT_OPTIONS.map(font => {
                 const selected = draft === font.id;
