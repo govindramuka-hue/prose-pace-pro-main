@@ -540,7 +540,14 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
   const flowPreview: Block[] = [
     previewBlock,
     { text: "A second line gives the thought room to breathe.", type: "narrative", isParagraphEnd: false },
-    { text: "The rhythm stays calm while the page moves forward.", type: "narrative", isParagraphEnd: true },
+    { text: "The rhythm stays calm while the page moves forward.", type: "narrative", isParagraphEnd: false },
+    { text: "Another sentence joins gently, without crowding the screen.", type: "narrative", isParagraphEnd: false },
+    { text: "The preview now grows and shrinks with the chosen flow size.", type: "narrative", isParagraphEnd: false },
+    { text: "Five lines feel compact, while more lines feel like a page.", type: "narrative", isParagraphEnd: false },
+    { text: "Each setting should reveal its effect before it is applied.", type: "narrative", isParagraphEnd: false },
+    { text: "The room keeps the same mood as the text expands.", type: "narrative", isParagraphEnd: false },
+    { text: "A longer preview helps judge comfort on small screens.", type: "narrative", isParagraphEnd: false },
+    { text: "The final line gives the sample a natural stopping point.", type: "narrative", isParagraphEnd: true },
   ];
 
   return (
