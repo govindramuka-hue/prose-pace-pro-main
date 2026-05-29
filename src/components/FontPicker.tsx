@@ -40,7 +40,7 @@ export function FontPicker({ value, onChange }: Props) {
         </div>
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog modal={false} open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[88vh] overflow-hidden bg-card border-border p-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <DialogTitle className="font-display text-2xl">Choose reading font</DialogTitle>

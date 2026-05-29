@@ -236,6 +236,15 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
   .font-display {
     font-family: 'Fraunces', Georgia, serif;
     font-optical-sizing: auto;

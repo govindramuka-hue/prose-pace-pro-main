@@ -1,4 +1,4 @@
-// Document ingestion: paste, txt, pdf, docx, image OCR.
+// Document ingestion for the library upload flow.
 // Returns extracted text plus optional per-page array (for PDFs) and page count.
 
 import { cleanPagesArray, cleanSinglePage } from "./text-cleaner";
@@ -7,17 +7,8 @@ export interface IngestResult {
   text: string;
   pages?: string[]; // raw per-page text (PDFs only)
   totalPages?: number;
-  source: "paste" | "pdf" | "docx" | "image" | "txt";
+  source: "pdf" | "epub";
   title: string;
-}
-
-export async function ingestPasted(text: string, title = "Untitled"): Promise<IngestResult> {
-  return { text: cleanSinglePage(text), source: "paste", title };
-}
-
-export async function ingestTxt(file: File): Promise<IngestResult> {
-  const text = await file.text();
-  return { text: cleanSinglePage(text), source: "txt", title: stripExt(file.name) };
 }
 
 export async function ingestPdf(
@@ -92,13 +83,6 @@ async function ocrPdf(pdf: any, fileName: string, onProgress?: (pct: number, msg
   };
 }
 
-export async function ingestDocx(file: File): Promise<IngestResult> {
-  const mammoth = await import("mammoth");
-  const buf = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer: buf });
-  return { text: cleanSinglePage(result.value), source: "docx", title: stripExt(file.name) };
-}
-
 export async function ingestEpub(file: File): Promise<IngestResult> {
   const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
@@ -142,37 +126,7 @@ export async function ingestEpub(file: File): Promise<IngestResult> {
     if (text) sections.push(text);
   }
 
-  return { text: cleanSinglePage(sections.join("\n\n")), source: "txt", title };
-}
-
-export async function ingestHtml(file: File): Promise<IngestResult> {
-  const html = await file.text();
-  return { text: cleanSinglePage(htmlToReadableText(html)), source: "txt", title: stripExt(file.name) };
-}
-
-export async function ingestRtf(file: File): Promise<IngestResult> {
-  const rtf = await file.text();
-  const text = rtf
-    .replace(/\\par[d]?/g, "\n")
-    .replace(/\\'[0-9a-fA-F]{2}/g, " ")
-    .replace(/\\[a-z]+\d* ?/gi, "")
-    .replace(/[{}]/g, " ")
-    .replace(/\s+/g, " ");
-  return { text: cleanSinglePage(text), source: "txt", title: stripExt(file.name) };
-}
-
-export async function ingestImage(
-  file: File,
-  onProgress?: (pct: number, msg: string) => void
-): Promise<IngestResult> {
-  const Tesseract = (await import("tesseract.js")).default;
-  onProgress?.(0.1, "Reading image…");
-  const { data } = await Tesseract.recognize(file, "eng", {
-    logger: m => {
-      if (m.status === "recognizing text") onProgress?.(m.progress, "Recognizing text…");
-    },
-  });
-  return { text: cleanSinglePage(data.text), source: "image", title: stripExt(file.name) };
+  return { text: cleanSinglePage(sections.join("\n\n")), source: "epub", title };
 }
 
 function stripExt(name: string): string {
@@ -186,13 +140,7 @@ export async function ingestFile(
   const name = file.name.toLowerCase();
   if (name.endsWith(".pdf")) return ingestPdf(file, onProgress);
   if (name.endsWith(".epub")) return ingestEpub(file);
-  if (name.endsWith(".docx")) return ingestDocx(file);
-  if (name.endsWith(".html") || name.endsWith(".htm")) return ingestHtml(file);
-  if (name.endsWith(".rtf")) return ingestRtf(file);
-  if (name.endsWith(".txt") || name.endsWith(".md")) return ingestTxt(file);
-  if (/\.(png|jpe?g|webp|bmp|gif)$/i.test(name)) return ingestImage(file, onProgress);
-  // Default: try as text
-  return ingestTxt(file);
+  throw new Error("Only PDF and EPUB files are supported.");
 }
 
 function htmlToReadableText(html: string) {

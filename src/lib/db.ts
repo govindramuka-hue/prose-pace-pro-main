@@ -12,7 +12,7 @@ export interface DocRecord {
   title: string;
   folder?: string;
   kind?: "narrative" | "study" | "reference";
-  source: "paste" | "pdf" | "docx" | "image" | "txt";
+  source: "paste" | "pdf" | "epub" | "docx" | "image" | "txt";
   createdAt: number;
   updatedAt: number;
   wordCount: number;
