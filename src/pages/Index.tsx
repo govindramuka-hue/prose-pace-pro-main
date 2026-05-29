@@ -516,9 +516,20 @@ function coverTreatment(_theme: { from: string; via: string; to: string }, activ
 
 function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boolean; onOpenChange: (open: boolean) => void; prefs: ReturnType<typeof usePrefs>[0]; setPrefs: ReturnType<typeof usePrefs>[1] }) {
   const [draft, setDraft] = useState(prefs);
+  const appliedSettingsRef = useRef(false);
   useEffect(() => {
-    if (open) setDraft(prefs);
+    if (open) {
+      appliedSettingsRef.current = false;
+      setDraft(prefs);
+    }
   }, [open, prefs]);
+  useEffect(() => {
+    if (!open) return;
+    document.documentElement.setAttribute("data-theme", draft.theme);
+    return () => {
+      if (!appliedSettingsRef.current) document.documentElement.setAttribute("data-theme", prefs.theme);
+    };
+  }, [draft.theme, open, prefs.theme]);
   const updateDraft = (p: Partial<typeof prefs>) => setDraft(prev => ({ ...prev, ...p }));
 
   const previewBlock: Block = {
@@ -654,7 +665,9 @@ function HomeSettingsDialog({ open, onOpenChange, prefs, setPrefs }: { open: boo
               <Button
                 className="h-11 w-full rounded-full"
                 onClick={() => {
+                  appliedSettingsRef.current = true;
                   setPrefs(draft);
+                  document.documentElement.setAttribute("data-theme", draft.theme);
                   onOpenChange(false);
                 }}
               >

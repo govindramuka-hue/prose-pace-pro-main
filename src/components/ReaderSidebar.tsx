@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Users, Settings2, X, Check, Volume2, VolumeX } from "lucide-react";
 import type { Book, Chapter } from "@/data/book";
@@ -132,7 +132,15 @@ function CharacterList({ characters }: { characters: { name: string; role: strin
 
 export function SettingsPanel({ prefs, setPrefs, onApplied }: { prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void; onApplied?: () => void }) {
   const [draft, setDraft] = useState(prefs);
+  const appliedRef = useRef(false);
   useEffect(() => setDraft(prefs), [prefs]);
+  useEffect(() => {
+    appliedRef.current = false;
+    document.documentElement.setAttribute("data-theme", draft.theme);
+    return () => {
+      if (!appliedRef.current) document.documentElement.setAttribute("data-theme", prefs.theme);
+    };
+  }, [draft.theme, prefs.theme]);
   const updateDraft = (p: Partial<Prefs>) => setDraft(prev => ({ ...prev, ...p }));
 
   return (
@@ -210,7 +218,9 @@ export function SettingsPanel({ prefs, setPrefs, onApplied }: { prefs: Prefs; se
         <button
           type="button"
           onClick={() => {
+            appliedRef.current = true;
             setPrefs(draft);
+            document.documentElement.setAttribute("data-theme", draft.theme);
             onApplied?.();
           }}
           className="h-11 w-full rounded-full bg-primary text-sm font-medium text-primary-foreground hover:opacity-90"
